@@ -1,53 +1,39 @@
-# 임시: SAM 3 브라우저 모델(rusen/sam3-browser-int8) 구조와 참조 구현 확인
+# 임시: SAM 3 기기 실행 검증 (텍스트 특징 생성 → 파이썬 참조 실행 → 실제 페이지 E2E)
+# 생성된 텍스트 특징 파일과 테스트 결과(로그 요약·스크린샷)만 이 브랜치에 커밋한다.
 name: sam3-probe
 on:
   push:
     branches: [ccr-34ba176c-p38il1]
-    paths: [.github/workflows/sam3-probe.yml]
+    paths: [.github/workflows/sam3-probe.yml, .github/sam3-test/*.py, .github/sam3-test/*.mjs, tools/sam3-panoptic/*.js]
+permissions:
+  contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install -q onnx onnxruntime numpy huggingface_hub
-      - name: Reference code
+      - run: pip install -q onnxruntime numpy opencv-python-headless huggingface_hub transformers
+      - name: Test images (COCO val2017)
         run: |
-          git clone -q --depth 1 https://github.com/vietanhdev/samexporter
-          echo "=== sam3_onnx.py ==="; cat -n samexporter/samexporter/sam3_onnx.py
-      - name: Model repo
+          curl -sSL -o cats.jpg http://images.cocodataset.org/val2017/000000039769.jpg
+          curl -sSL -o room.jpg http://images.cocodataset.org/val2017/000000000139.jpg
+      - name: Text embeddings + Python reference
+        run: python .github/sam3-test/gen.py cats.jpg room.jpg
+      - name: Browser E2E (CPU/WASM)
         run: |
-          python - <<'PY'
-          from huggingface_hub import HfApi, hf_hub_download
-          api = HfApi()
-          info = api.model_info('rusen/sam3-browser-int8', files_metadata=True)
-          print('sha', info.sha)
-          for s in info.siblings: print('FILE', s.rfilename, s.size)
-          print(open(hf_hub_download('rusen/sam3-browser-int8', 'README.md')).read())
-          PY
-      - name: ONNX IO
+          npm i playwright@1.56.1 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          python -m http.server 8000 >/dev/null 2>&1 &
+          sleep 2
+          node .github/sam3-test/e2e.mjs cats.jpg room.jpg
+      - name: Commit generated files
+        if: always()
         run: |
-          python - <<'PY'
-          import onnx, os
-          from huggingface_hub import HfApi, hf_hub_download
-          api = HfApi()
-          files = [s.rfilename for s in api.model_info('rusen/sam3-browser-int8').siblings]
-          for f in files:
-              if not f.endswith('.onnx'): continue
-              p = hf_hub_download('rusen/sam3-browser-int8', f)
-              # 외부 데이터 파일 있으면 같이
-              for g in files:
-                  if g.startswith(f) and g != f: hf_hub_download('rusen/sam3-browser-int8', g)
-              m = onnx.load(p, load_external_data=False)
-              def shp(t):
-                  tt = t.type.tensor_type
-                  return onnx.TensorProto.DataType.Name(tt.elem_type), [d.dim_param or d.dim_value for d in tt.shape.dim]
-              print('=====', f, os.path.getsize(p), 'opset', [(o.domain, o.version) for o in m.opset_import])
-              for i in m.graph.input: print('  IN ', i.name, *shp(i))
-              for o in m.graph.output: print('  OUT', o.name, *shp(o))
-              ops = sorted(set(n.op_type for n in m.graph.node)); print('  OPS', ops)
-          tok = [f for f in files if 'token' in f.lower()]
-          for t in tok:
-              s = open(hf_hub_download('rusen/sam3-browser-int8', t)).read()
-              print('=====', t, len(s)); print(s[:1500])
-          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add tools/sam3-panoptic/text-embeddings.json tools/sam3-panoptic/text-embeddings.bin .github/sam3-test/out
+          git commit -m "SAM 3: generated text embeddings and test screenshots" || exit 0
+          git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME"

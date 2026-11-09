@@ -77,3 +77,11 @@
 .legend .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .legend .kind { font-size: 11px; color: var(--text-sub); font-weight: 600; margin-left: 4px; }
 .legend .meta { flex: none; color: var(--text-sub); font-variant-numeric: tabular-nums; font-size: 13px; }
+
+.key-card .segmented { margin-top: 4px; }
+.key-card > div { margin-left: 16px; margin-right: 16px; }
+.key-card > div:last-child { margin-bottom: 16px; }
+#api-box .text-input { width: 100%; }
+.select-sm { padding: 8px 10px; flex: 1; }
+.progress { width: min(70%, 260px); height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.25); overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background: #fff; border-radius: inherit; transition: width 0.2s; }

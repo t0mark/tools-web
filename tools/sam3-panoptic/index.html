@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="Tools Web" />
   <link rel="manifest" href="../../manifest.webmanifest" />
   <link rel="stylesheet" href="../../assets/css/base.css?v=20261109d" />
-  <link rel="stylesheet" href="style.css?v=20261109d" />
+  <link rel="stylesheet" href="style.css?v=20261109e" />
 </head>
 <body>
   <header class="topbar">
@@ -27,14 +27,35 @@
   <main class="container">
     <input id="file-input" type="file" accept="image/*" class="sr-only" />
 
-    <!-- API 키 -->
+    <!-- 실행 방식 -->
     <details class="card key-card" id="key-card">
-      <summary><span>Roboflow API 키</span><span class="key-state missing" id="key-state">미설정</span></summary>
-      <p class="small">SAM 3는 휴대폰에서 직접 돌리기엔 너무 커서(약 850MB), Roboflow의 SAM 3 서버로 이미지를 보내 분석합니다.
-        <a href="https://app.roboflow.com/settings/api" target="_blank" rel="noopener">Roboflow 설정</a>의 <b>프라이빗 API 키</b>를 넣어주세요.
-        퍼블리셔블 키(rf_…)는 SAM 3 서버에서 거절됩니다. 키는 이 기기에만 저장되고 Roboflow로만 전송됩니다.</p>
-      <input type="password" id="api-key" class="text-input" placeholder="프라이빗 API 키 붙여넣기" autocomplete="off" spellcheck="false" />
-      <label class="check"><input type="checkbox" id="remember-key" checked /> 이 기기에 저장</label>
+      <summary><span>실행 방식</span><span class="key-state ok" id="key-state">기기에서 (실험)</span></summary>
+      <div class="segmented two" role="radiogroup">
+        <label><input type="radio" name="mode" id="mode-local" value="local" checked /><span><b>기기에서</b><small>실험 · 키 불필요</small></span></label>
+        <label><input type="radio" name="mode" id="mode-api" value="api" /><span><b>서버에서</b><small>빠름 · API 키 필요</small></span></label>
+      </div>
+
+      <div id="local-box">
+        <p class="small">SAM 3(INT8 경량화, 448px 입력)를 이 기기에서 직접 실행합니다. 이미지가 밖으로 나가지 않아요.
+          휴대폰 성능에 따라 한 장에 수십 초 이상 걸리거나, 메모리가 부족하면 실패할 수 있어요.</p>
+        <p class="small" id="model-state"></p>
+        <div class="range-row">
+          <label for="ep-select">가속</label>
+          <select id="ep-select" class="text-input select-sm">
+            <option value="webgpu">GPU 사용 (WebGPU)</option>
+            <option value="wasm">CPU만 사용</option>
+          </select>
+        </div>
+        <button type="button" class="chip mt hidden" id="clear-model">저장된 모델 삭제</button>
+      </div>
+
+      <div id="api-box" class="hidden">
+        <p class="small">Roboflow의 SAM 3 서버로 이미지를 보내 분석합니다.
+          <a href="https://app.roboflow.com/settings/api" target="_blank" rel="noopener">Roboflow 설정</a>의 <b>프라이빗 API 키</b>를 넣어주세요.
+          퍼블리셔블 키(rf_…)는 SAM 3 서버에서 거절됩니다. 키는 이 기기에만 저장되고 Roboflow로만 전송됩니다.</p>
+        <input type="password" id="api-key" class="text-input" placeholder="프라이빗 API 키 붙여넣기" autocomplete="off" spellcheck="false" />
+        <label class="check"><input type="checkbox" id="remember-key" checked /> 이 기기에 저장</label>
+      </div>
     </details>
 
     <section id="pick-step">
@@ -50,7 +71,10 @@
     <section id="work-step" class="hidden">
       <div class="stage">
         <canvas id="cv"></canvas>
-        <div class="stage-loading hidden" id="loading"><span class="spinner"></span><span id="loading-text">분석 중…</span></div>
+        <div class="stage-loading hidden" id="loading">
+          <span class="spinner"></span><span id="loading-text">분석 중…</span>
+          <div class="progress hidden" id="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        </div>
       </div>
 
       <div class="card" id="view-card">
@@ -75,6 +99,7 @@
         <h3>찾은 영역 <small id="seg-count"></small></h3>
         <ul class="legend" id="legend"></ul>
         <p class="small" id="legend-empty">아직 결과가 없어요.</p>
+        <p class="small" id="timing"></p>
       </div>
 
       <details class="card">
@@ -98,10 +123,11 @@
       <p id="error-text"></p>
     </div>
 
-    <p class="footnote">이 도구는 다른 도구와 달리 이미지를 Roboflow 서버로 전송합니다.<br />
-      모델: <a href="https://ai.meta.com/sam3/" target="_blank" rel="noopener">SAM 3</a> (Meta) · 추론: Roboflow Serverless API</p>
+    <p class="footnote">모델: <a href="https://ai.meta.com/sam3/" target="_blank" rel="noopener">SAM 3</a> (Meta) ·
+      기기 실행: <a href="https://huggingface.co/rusen/sam3-browser-int8" target="_blank" rel="noopener">sam3-browser-int8</a> + ONNX Runtime Web ·
+      서버 실행: Roboflow Serverless API (이 경우만 이미지가 Roboflow로 전송됨)</p>
   </main>
 
-  <script src="app.js?v=20261109d"></script>
+  <script src="app.js?v=20261109e"></script>
 </body>
 </html>

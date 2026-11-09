@@ -3,8 +3,10 @@
  *
  * SAM 3는 "텍스트 개념 → 해당하는 모든 객체 마스크"를 내주는 모델이라 그 자체로 파놉틱 출력은 없다.
  * 그래서
- *  1) 물체(things: 사람, 차…)와 배경(stuff: 하늘, 도로…) 개념 목록을 Roboflow SAM 3 API에 보내고
- *  2) 돌아온 폴리곤 마스크들을 브라우저에서 하나의 라벨 맵으로 합친다.
+ *  1) 물체(things: 사람, 차…)와 배경(stuff: 하늘, 도로…) 개념 목록으로 마스크를 구하고
+ *     - 기기에서 실행: ONNX Runtime Web + INT8 SAM 3 (sam3.worker.js)
+ *     - 서버에서 실행: Roboflow SAM 3 API (프라이빗 키 필요)
+ *  2) 돌아온 마스크들을 브라우저에서 하나의 라벨 맵으로 합친다.
  *     - 픽셀마다 한 영역만: 물체 > 배경, 같은 종류끼리는 신뢰도 높은 쪽
  *     - 물체는 인스턴스별로, 배경은 같은 클래스끼리 하나의 영역으로
  */
@@ -16,6 +18,15 @@
   const MAX_SIDE = 1280; // 업로드 전 최대 변 길이
   const REQUEST_THRESH = 0.3; // 서버 기준은 낮게 받고, 화면에서 슬라이더로 거름
   const KEY_STORAGE = 'toolsweb.roboflowKey';
+  const MODE_STORAGE = 'toolsweb.sam3Mode';
+  const EP_STORAGE = 'toolsweb.sam3Ep';
+  const LOCAL_INPUT = 448; // 기기 모델 입력 크기
+  const LOCAL_MASK_SIDE = 512; // 기기 모델 마스크 해상도(긴 변)
+  const LOCAL_MODEL_URLS = [
+    'https://huggingface.co/rusen/sam3-browser-int8/resolve/970196bb75edfbcdab59567ee017673a4c53adc7/compact-448/sam3_image_encoder_fp16.onnx',
+    'https://huggingface.co/rusen/sam3-browser-int8/resolve/970196bb75edfbcdab59567ee017673a4c53adc7/compact-448/sam3_decoder.onnx',
+  ];
+  const MODEL_CACHE = 'sam3-models-v1';
   // 참고: 퍼블리셔블 키(rf_...)는 서버리스 API에서 401 "not authorized for serverless inference"로 거절됨 → 프라이빗 키 필요
 
   const DEFAULT_THINGS = 'person, car, bicycle, motorcycle, bus, truck, dog, cat, bird, chair, table, sofa, bed, bottle, cup, laptop, cell phone, book, potted plant, tv, bag, umbrella';
@@ -39,12 +50,15 @@
     legend: $('legend'), legendEmpty: $('legend-empty'), segCount: $('seg-count'),
     things: $('things'), stuff: $('stuff'), resetPrompts: $('reset-prompts'),
     run: $('run-btn'), save: $('save-btn'), errorBox: $('error-box'), errorText: $('error-text'),
+    modeLocal: $('mode-local'), modeApi: $('mode-api'), localBox: $('local-box'), apiBox: $('api-box'),
+    modelState: $('model-state'), epSelect: $('ep-select'), clearModel: $('clear-model'), timing: $('timing'),
+    progress: $('progress'), progressBar: $('progress-bar'),
   };
 
   const state = {
     image: null, // 업로드용으로 줄인 캔버스
     name: 'image',
-    raw: [], // { prompt, kind:'thing'|'stuff', confidence, polygons }
+    raw: [], // { prompt, kind:'thing'|'stuff', confidence, polygons | (mask,w,h) }
     segments: [], // 합쳐진 최종 영역
     labels: null, // Int32Array(w*h), -1 = 없음
     selected: -1,
@@ -70,8 +84,56 @@
   }
 
   els.apiKey.value = store.get(KEY_STORAGE) || '';
-  els.keyCard.open = !userKey() || isPublishable(userKey());
   syncKeyState();
+
+  // ---------- 실행 방식 ----------
+  const mode = () => (els.modeApi.checked ? 'api' : 'local');
+  function syncMode() {
+    els.localBox.classList.toggle('hidden', mode() !== 'local');
+    els.apiBox.classList.toggle('hidden', mode() !== 'api');
+    els.keyState.textContent = mode() === 'local' ? '기기에서 (실험)' : els.keyState.textContent;
+    if (mode() === 'api') syncKeyState();
+    else els.keyState.className = 'key-state ok';
+    store.set(MODE_STORAGE, mode());
+  }
+  (store.get(MODE_STORAGE) === 'api' ? els.modeApi : els.modeLocal).checked = true;
+  els.epSelect.value = store.get(EP_STORAGE) || ('gpu' in navigator ? 'webgpu' : 'wasm');
+  [els.modeLocal, els.modeApi].forEach((r) => r.addEventListener('change', syncMode));
+  els.epSelect.addEventListener('change', () => { store.set(EP_STORAGE, els.epSelect.value); resetWorker(); });
+  syncMode();
+
+  async function modelCached() {
+    try {
+      const c = await caches.open(MODEL_CACHE);
+      const hits = await Promise.all(LOCAL_MODEL_URLS.map((u) => c.match(u)));
+      return hits.every(Boolean);
+    } catch (e) { return false; }
+  }
+  async function syncModelState() {
+    const cached = await modelCached();
+    els.modelState.textContent = cached ? '모델이 이 기기에 저장되어 있어요.' : '처음 실행할 때 모델 약 500MB를 내려받아요 (Wi-Fi 권장). 한 번 받으면 기기에 저장됩니다.';
+    els.clearModel.classList.toggle('hidden', !cached);
+    return cached;
+  }
+  syncModelState();
+  els.clearModel.addEventListener('click', async () => {
+    if (!confirm('저장된 SAM 3 모델(약 500MB+)을 이 기기에서 삭제할까요?')) return;
+    try { await caches.delete(MODEL_CACHE); } catch (e) { /* 무시 */ }
+    resetWorker();
+    syncModelState();
+  });
+
+  // 멀티스레드 WASM(SharedArrayBuffer)을 위해 교차 출처 격리용 서비스 워커 등록 (최초 1회 새로고침)
+  if ('serviceWorker' in navigator && window.isSecureContext && !window.crossOriginIsolated) {
+    navigator.serviceWorker.register('coi-sw.js').then(() => {
+      let reloaded = null;
+      try { reloaded = sessionStorage.getItem('coi-reloaded'); } catch (e) { /* 무시 */ }
+      if (!reloaded) {
+        try { sessionStorage.setItem('coi-reloaded', '1'); } catch (e) { /* 무시 */ }
+        window.location.reload();
+      }
+    }).catch(() => { /* 지원 안 되면 단일 스레드로 동작 */ });
+  }
   els.apiKey.addEventListener('input', () => {
     syncKeyState();
     if (els.rememberKey.checked) store.set(KEY_STORAGE, els.apiKey.value.trim());
@@ -151,12 +213,88 @@
     }));
   }
 
+  // ---------- 기기에서 실행 ----------
+  let worker = null;
+  let workerReady = null;
+  let workerHandler = null;
+
+  function resetWorker() {
+    if (worker) worker.terminate();
+    worker = null;
+    workerReady = null;
+  }
+
+  function setProgress(text, ratio) {
+    els.loadingText.textContent = text;
+    els.progress.classList.toggle('hidden', ratio == null);
+    if (ratio != null) els.progressBar.style.width = `${Math.round(Math.min(1, ratio) * 100)}%`;
+  }
+
+  function getWorker() {
+    if (worker) return workerReady;
+    worker = new Worker('sam3.worker.js?v=20261109e', { type: 'module' });
+    worker.onmessage = (e) => workerHandler && workerHandler(e.data);
+    worker.onerror = (e) => workerHandler && workerHandler({ type: 'error', message: e.message || '워커 오류' });
+    workerReady = new Promise((resolve, reject) => {
+      const mb = (b) => (b / 1048576).toFixed(0);
+      workerHandler = (m) => {
+        if (m.type === 'progress') setProgress(m.cached ? `${m.label} 불러오는 중…` : `${m.label} 내려받는 중 ${mb(m.loaded)} / ${mb(m.total)}MB`, m.loaded / m.total);
+        else if (m.type === 'stage') setProgress(m.text, null);
+        else if (m.type === 'log') console.info('[sam3]', m.text);
+        else if (m.type === 'ready') { syncModelState(); resolve(m); }
+        else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
+      };
+      worker.postMessage({ type: 'init', ep: els.epSelect.value });
+    });
+    return workerReady;
+  }
+
+  function localPixels() {
+    const c = document.createElement('canvas');
+    c.width = LOCAL_INPUT;
+    c.height = LOCAL_INPUT;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(state.image, 0, 0, LOCAL_INPUT, LOCAL_INPUT); // 참조 구현과 같이 비율 무시하고 맞춤
+    const d = ctx.getImageData(0, 0, LOCAL_INPUT, LOCAL_INPUT).data;
+    const n = LOCAL_INPUT * LOCAL_INPUT;
+    const out = new Uint8Array(3 * n);
+    for (let i = 0; i < n; i++) { out[i] = d[i * 4]; out[n + i] = d[i * 4 + 1]; out[2 * n + i] = d[i * 4 + 2]; }
+    return out;
+  }
+
+  async function runLocal(prompts) {
+    if (!(await modelCached()) && !confirm('SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?')) {
+      throw new Error('모델 다운로드를 취소했어요.');
+    }
+    setProgress('모델 준비 중…', null);
+    const info = await getWorker();
+    const s = Math.min(1, LOCAL_MASK_SIDE / Math.max(state.image.width, state.image.height));
+    const outW = Math.max(1, Math.round(state.image.width * s));
+    const outH = Math.max(1, Math.round(state.image.height * s));
+    const pixels = localPixels();
+    return new Promise((resolve, reject) => {
+      workerHandler = (m) => {
+        if (m.type === 'stage') setProgress(m.text, null);
+        else if (m.type === 'progress') setProgress(`${m.label} 내려받는 중 ${(m.loaded / 1048576).toFixed(0)} / ${(m.total / 1048576).toFixed(0)}MB`, m.loaded / m.total);
+        else if (m.type === 'decode') setProgress(`영역 찾는 중 ${m.done + 1}/${m.total} · ${labelOf(m.prompt)}`, (m.done + 1) / m.total);
+        else if (m.type === 'log') console.info('[sam3]', m.text);
+        else if (m.type === 'result') resolve({ ...m, info });
+        else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
+      };
+      worker.postMessage({ type: 'run', pixels, outW, outH, prompts, thresh: REQUEST_THRESH }, [pixels.buffer]);
+    });
+  }
+
   async function analyze() {
     if (!state.image || state.busy) return;
     hideError();
+    if (mode() === 'local') return analyzeLocal();
     const key = userKey();
     if (!key || isPublishable(key)) {
       els.keyCard.open = true;
+      els.modeApi.checked = true;
+      syncMode();
       els.apiKey.focus();
       showError(key
         ? '퍼블리셔블 키(rf_…)는 SAM 3 서버에서 사용할 수 없어요. 프라이빗 API 키를 입력해주세요.'
@@ -171,7 +309,7 @@
     state.busy = true;
     els.run.disabled = true;
     els.loading.classList.remove('hidden');
-    els.loadingText.textContent = `분석 중… (${all.length}개 대상)`;
+    setProgress(`분석 중… (${all.length}개 대상)`, null);
     try {
       const base64 = state.image.toDataURL('image/jpeg', 0.9).split(',')[1];
       const batches = [];
@@ -195,6 +333,39 @@
       state.busy = false;
       els.run.disabled = false;
       els.loading.classList.add('hidden');
+    }
+  }
+
+  async function analyzeLocal() {
+    const things = parseList(els.things.value);
+    const stuff = parseList(els.stuff.value).filter((t) => !things.includes(t));
+    const all = [...things, ...stuff];
+    if (!all.length) { showError('찾을 대상을 하나 이상 입력해주세요.'); return; }
+    state.busy = true;
+    els.run.disabled = true;
+    els.loading.classList.remove('hidden');
+    els.timing.textContent = '';
+    try {
+      const res = await runLocal(all);
+      const thingSet = new Set(things);
+      state.raw = res.items.map((it) => ({
+        prompt: it.prompt, kind: thingSet.has(it.prompt) ? 'thing' : 'stuff', confidence: it.confidence, mask: it.mask, w: it.w, h: it.h,
+      }));
+      const t = res.timings;
+      const engine = res.ep === 'webgpu' ? 'GPU(WebGPU)' : `CPU ${res.info.threads}스레드`;
+      els.timing.textContent = `기기에서 처리 · ${engine} · 이미지 분석 ${(t.encode / 1000).toFixed(1)}초 · 대상 ${all.length}개 ${(t.decode / 1000).toFixed(1)}초`;
+      compose();
+    } catch (err) {
+      console.error(err);
+      let msg = (err && err.message) || String(err);
+      if (/memory|allocation|RangeError|out of memory/i.test(msg)) msg = `기기 메모리가 부족해 모델을 실행하지 못했어요. 다른 앱을 닫고 다시 시도하거나 '서버에서 실행'을 이용해주세요. (${msg})`;
+      else if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) msg = '모델을 내려받지 못했어요. 인터넷 연결을 확인해주세요.';
+      showError(msg);
+    } finally {
+      state.busy = false;
+      els.run.disabled = false;
+      els.loading.classList.add('hidden');
+      els.progress.classList.add('hidden');
     }
   }
 
@@ -248,6 +419,17 @@
         instanceNo.set(it.prompt, n);
         segs.push({ id, prompt: it.prompt, kind: it.kind, confidence: it.confidence, n });
         if (it.kind === 'stuff') stuffSeg.set(it.prompt, id);
+      }
+      if (it.mask) {
+        // 기기 모델 마스크(저해상도) → 화면 해상도로 최근접 확대
+        const xm = new Int32Array(w);
+        for (let x = 0; x < w; x++) xm[x] = Math.min(it.w - 1, Math.floor(((x + 0.5) * it.w) / w));
+        for (let y = 0; y < h; y++) {
+          const my = Math.min(it.h - 1, Math.floor(((y + 0.5) * it.h) / h)) * it.w;
+          const row = y * w;
+          for (let x = 0; x < w; x++) if (it.mask[my + xm[x]]) labels[row + x] = id;
+        }
+        continue;
       }
       const m = rasterize(it.polygons, w, h);
       if (!m) continue;
