@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+  <title>SAM 3 파놉틱 세그멘테이션 · Tools Web</title>
+  <link rel="icon" href="../../favicon.ico" sizes="32x32" />
+  <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Tools Web" />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="stylesheet" href="../../assets/css/base.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="back-btn" href="../../" aria-label="도구 목록으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <h1>SAM 3 세그멘테이션</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <input id="file-input" type="file" accept="image/*" class="sr-only" />
+
+    <!-- API 키 -->
+    <details class="card key-card" id="key-card">
+      <summary><span>Roboflow API 키</span><span class="key-state" id="key-state">미설정</span></summary>
+      <p class="small">SAM 3는 휴대폰에서 직접 돌리기엔 너무 커서(약 850MB), Roboflow의 SAM 3 서버로 이미지를 보내 분석합니다.
+        <a href="https://app.roboflow.com/settings/api" target="_blank" rel="noopener">Roboflow 설정</a>에서 API 키를 발급받아 넣어주세요.</p>
+      <input type="password" id="api-key" class="text-input" placeholder="API 키 붙여넣기" autocomplete="off" spellcheck="false" />
+      <label class="check"><input type="checkbox" id="remember-key" checked /> 이 기기에 저장</label>
+    </details>
+
+    <section id="pick-step">
+      <label class="dropzone" for="file-input" id="dropzone">
+        <div class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/><path d="m2 18 10 5 10-5" opacity=".5"/></svg>
+        </div>
+        <strong>이미지 선택</strong>
+        <span>장면 전체를 영역별로 나눠서 보여줍니다</span>
+      </label>
+    </section>
+
+    <section id="work-step" class="hidden">
+      <div class="stage">
+        <canvas id="cv"></canvas>
+        <div class="stage-loading hidden" id="loading"><span class="spinner"></span><span id="loading-text">분석 중…</span></div>
+      </div>
+
+      <div class="card" id="view-card">
+        <div class="toggle-row">
+          <button type="button" class="chip" data-toggle="labels" aria-pressed="true">라벨</button>
+          <button type="button" class="chip" data-toggle="borders" aria-pressed="true">경계선</button>
+          <button type="button" class="chip" data-toggle="original" aria-pressed="false">원본만</button>
+        </div>
+        <div class="range-row">
+          <label for="r-alpha">색 진하기</label>
+          <input type="range" id="r-alpha" min="0" max="100" value="55" />
+          <output id="r-alpha-out"></output>
+        </div>
+        <div class="range-row">
+          <label for="r-thresh">신뢰도 기준</label>
+          <input type="range" id="r-thresh" min="30" max="95" value="50" />
+          <output id="r-thresh-out"></output>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>찾은 영역 <small id="seg-count"></small></h3>
+        <ul class="legend" id="legend"></ul>
+        <p class="small" id="legend-empty">아직 결과가 없어요.</p>
+      </div>
+
+      <details class="card">
+        <summary class="summary">찾을 대상 (영어 단어, 쉼표로 구분)</summary>
+        <h3 class="mt">물체 — 하나하나 따로 구분</h3>
+        <textarea id="things" class="text-input" rows="4" spellcheck="false"></textarea>
+        <h3 class="mt">배경 — 같은 종류는 하나의 영역</h3>
+        <textarea id="stuff" class="text-input" rows="3" spellcheck="false"></textarea>
+        <button type="button" class="chip mt" id="reset-prompts">기본값으로</button>
+      </details>
+
+      <div class="btn-row">
+        <button type="button" class="btn" id="run-btn">다시 분석</button>
+        <button type="button" class="btn secondary" id="save-btn">이미지 저장</button>
+      </div>
+      <label class="btn secondary mt" for="file-input">다른 이미지</label>
+    </section>
+
+    <div class="card error-card hidden" id="error-box" role="alert">
+      <strong>분석하지 못했어요</strong>
+      <p id="error-text"></p>
+    </div>
+
+    <p class="footnote">이 도구는 다른 도구와 달리 이미지를 Roboflow 서버로 전송합니다.<br />
+      모델: <a href="https://ai.meta.com/sam3/" target="_blank" rel="noopener">SAM 3</a> (Meta) · 추론: Roboflow Serverless API</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
