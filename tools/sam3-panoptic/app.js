@@ -16,6 +16,8 @@
   const MAX_SIDE = 1280; // 업로드 전 최대 변 길이
   const REQUEST_THRESH = 0.3; // 서버 기준은 낮게 받고, 화면에서 슬라이더로 거름
   const KEY_STORAGE = 'toolsweb.roboflowKey';
+  // Roboflow 퍼블리셔블 키 (브라우저 공개용 키, 추론 전용). 사용자가 다른 키를 넣으면 그 키를 우선 사용
+  const DEFAULT_KEY = 'rf_N63pGkvI2EO7p23KkNZ4qlzLrfw2';
 
   const DEFAULT_THINGS = 'person, car, bicycle, motorcycle, bus, truck, dog, cat, bird, chair, table, sofa, bed, bottle, cup, laptop, cell phone, book, potted plant, tv, bag, umbrella';
   const DEFAULT_STUFF = 'sky, tree, grass, road, sidewalk, building, wall, floor, ceiling, water, mountain, sand, snow, window, door';
@@ -58,14 +60,17 @@
     del(k) { try { localStorage.removeItem(k); } catch (e) { /* 무시 */ } },
   };
 
+  const userKey = () => els.apiKey.value.trim();
+  const activeKey = () => userKey() || DEFAULT_KEY;
+
   function syncKeyState() {
-    const has = els.apiKey.value.trim().length > 0;
-    els.keyState.textContent = has ? '설정됨' : '미설정';
-    els.keyState.className = `key-state ${has ? 'ok' : 'missing'}`;
+    const own = userKey().length > 0;
+    els.keyState.textContent = own ? '내 키 사용' : '기본 키 사용';
+    els.keyState.className = 'key-state ok';
   }
 
   els.apiKey.value = store.get(KEY_STORAGE) || '';
-  els.keyCard.open = !els.apiKey.value;
+  els.keyCard.open = false;
   syncKeyState();
   els.apiKey.addEventListener('input', () => {
     syncKeyState();
@@ -129,7 +134,11 @@
     } catch (e) {
       throw new Error('서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요.');
     }
-    if (res.status === 401 || res.status === 403) throw new Error('API 키가 올바르지 않습니다. Roboflow API 키를 확인해주세요.');
+    if (res.status === 401 || res.status === 403) {
+      throw new Error(apiKey === DEFAULT_KEY
+        ? '기본 키로는 지금 분석할 수 없어요(사용량 한도 등). 위의 "Roboflow API 키"를 열어 본인 키를 입력해주세요.'
+        : 'API 키가 올바르지 않습니다. Roboflow API 키를 확인해주세요.');
+    }
     if (!res.ok) {
       let detail = '';
       try { detail = (await res.text()).slice(0, 200); } catch (e) { /* 무시 */ }
@@ -145,13 +154,7 @@
   async function analyze() {
     if (!state.image || state.busy) return;
     hideError();
-    const key = els.apiKey.value.trim();
-    if (!key) {
-      els.keyCard.open = true;
-      els.apiKey.focus();
-      showError('먼저 Roboflow API 키를 입력해주세요.');
-      return;
-    }
+    const key = activeKey();
     const things = parseList(els.things.value);
     const stuff = parseList(els.stuff.value).filter((t) => !things.includes(t));
     const all = [...things, ...stuff];
