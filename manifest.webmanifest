@@ -1,12 +1,14 @@
 {
-  "name": "도구 모음",
-  "short_name": "도구",
+  "name": "Tools Web",
+  "short_name": "Tools Web",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f5f6f8",
   "theme_color": "#3b5bfd",
   "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
     { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

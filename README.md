@@ -1,4 +1,4 @@
-# tools-web-ver
+# Tools Web
 
 모바일 우선 웹 도구 모음. 빌드 과정 없는 정적 사이트라서 GitHub Pages 등에 그대로 올리면 됩니다.
 모든 처리는 브라우저 안에서 이루어지고, 파일이 서버로 전송되지 않습니다.
@@ -13,6 +13,8 @@ vendor/                    외부 라이브러리 (직접 포함)
 ```
 
 새 도구 추가: `tools/<이름>/index.html`을 만들고 `index.html`의 `.tool-list`에 카드를 하나 추가합니다.
+
+배포: GitHub Pages (`main` 브랜치, `/ (root)`) → https://t0mark.github.io/tools-web/
 
 ## 도구
 
