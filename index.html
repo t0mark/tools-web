@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+  <title>도구 모음</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner"><h1>도구 모음</h1></div>
+  </header>
+
+  <main class="container">
+    <section class="page-intro">
+      <h2>무엇을 할까요?</h2>
+      <p>사용할 도구를 선택하세요. 모든 처리는 기기 안에서 이루어지며 파일이 서버로 전송되지 않습니다.</p>
+    </section>
+
+    <!-- 새 도구를 추가할 때 아래 목록에 <li>를 추가하세요. -->
+    <ul class="tool-list">
+      <li>
+        <a class="tool-card" href="tools/mp4-to-mp3/">
+          <div class="tool-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <div class="tool-meta">
+            <strong>MP4 → MP3</strong>
+            <span>동영상에서 오디오만 추출해 MP3로 변환</span>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </li>
+    </ul>
+  </main>
+</body>
+</html>

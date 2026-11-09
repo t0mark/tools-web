@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+  <title>MP4 → MP3 변환</title>
+  <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="stylesheet" href="../../assets/css/base.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="back-btn" href="../../" aria-label="도구 목록으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <h1>MP4 → MP3</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 숨김 섹션 안에 두면 iOS에서 click()이 막힐 수 있어 밖에 둠 -->
+    <input id="file-input" type="file" accept="video/mp4,video/*,audio/*,.mp4,.m4a,.m4v,.mov" class="sr-only" />
+    <!-- 1. 파일 선택 -->
+    <section id="pick-step">
+      <label class="dropzone" id="dropzone" for="file-input">
+        <div class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+        </div>
+        <strong>동영상 파일 선택</strong>
+        <span>MP4 · MOV · M4A 등</span>
+      </label>
+      <p class="hint">파일은 기기 밖으로 전송되지 않고, 브라우저 안에서 바로 변환됩니다.</p>
+    </section>
+
+    <!-- 2. 설정 -->
+    <section id="config-step" class="hidden">
+      <div class="card file-info">
+        <div class="file-badge" aria-hidden="true">MP4</div>
+        <div class="file-text">
+          <strong id="file-name">-</strong>
+          <span id="file-detail">-</span>
+        </div>
+        <button type="button" class="link-btn" id="change-file">변경</button>
+      </div>
+
+      <div class="card">
+        <h3>음질 (비트레이트)</h3>
+        <div class="segmented" role="radiogroup" id="bitrate-group">
+          <label><input type="radio" name="bitrate" value="64" /><span><b>64k</b><small>작게</small></span></label>
+          <label><input type="radio" name="bitrate" value="128" checked /><span><b>128k</b><small>표준</small></span></label>
+          <label><input type="radio" name="bitrate" value="192" /><span><b>192k</b><small>고음질</small></span></label>
+          <label><input type="radio" name="bitrate" value="320" /><span><b>320k</b><small>최고</small></span></label>
+        </div>
+
+        <h3 class="mt">채널</h3>
+        <div class="segmented two" role="radiogroup" id="channel-group">
+          <label><input type="radio" name="channels" value="2" checked /><span><b>스테레오</b></span></label>
+          <label><input type="radio" name="channels" value="1" /><span><b>모노</b><small>용량 절약</small></span></label>
+        </div>
+
+        <div class="estimate" id="estimate">예상 용량 계산 중…</div>
+      </div>
+
+      <button type="button" class="btn" id="convert-btn">MP3로 변환</button>
+    </section>
+
+    <!-- 3. 진행 -->
+    <section id="progress-step" class="hidden">
+      <div class="card progress-card">
+        <div class="progress-label">
+          <span id="progress-text">준비 중…</span>
+          <span id="progress-pct"></span>
+        </div>
+        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progress-bar"></div></div>
+        <p class="hint">변환하는 동안 이 화면을 유지해주세요.</p>
+      </div>
+      <button type="button" class="btn secondary" id="cancel-btn">취소</button>
+    </section>
+
+    <!-- 4. 결과 -->
+    <section id="result-step" class="hidden">
+      <div class="card result-card">
+        <div class="result-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <strong id="result-name">-</strong>
+        <div class="size-compare">
+          <div><small>원본</small><b id="size-before">-</b></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div><small>MP3</small><b id="size-after">-</b></div>
+        </div>
+        <span class="reduction" id="reduction"></span>
+        <audio id="result-audio" controls preload="metadata"></audio>
+      </div>
+      <div class="btn-row">
+        <a class="btn" id="download-btn" download>다운로드</a>
+        <button type="button" class="btn secondary hidden" id="share-btn">공유 / 저장</button>
+      </div>
+      <button type="button" class="btn secondary mt" id="again-btn">다른 파일 변환</button>
+    </section>
+
+    <!-- 오류 -->
+    <div class="card error-card hidden" id="error-box" role="alert">
+      <strong>변환하지 못했어요</strong>
+      <p id="error-text"></p>
+    </div>
+
+    <p class="footnote">
+      MP3 인코딩: <a href="https://github.com/zhuker/lamejs" target="_blank" rel="noopener">lamejs</a>
+      (<a href="https://lame.sourceforge.io/" target="_blank" rel="noopener">LAME</a>, LGPL)
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
