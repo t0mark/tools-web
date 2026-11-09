@@ -1,0 +1,53 @@
+# 임시: SAM 3 브라우저 모델(rusen/sam3-browser-int8) 구조와 참조 구현 확인
+name: sam3-probe
+on:
+  push:
+    branches: [ccr-34ba176c-p38il1]
+    paths: [.github/workflows/sam3-probe.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -q onnx onnxruntime numpy huggingface_hub
+      - name: Reference code
+        run: |
+          git clone -q --depth 1 https://github.com/vietanhdev/samexporter
+          echo "=== sam3_onnx.py ==="; cat -n samexporter/samexporter/sam3_onnx.py
+      - name: Model repo
+        run: |
+          python - <<'PY'
+          from huggingface_hub import HfApi, hf_hub_download
+          api = HfApi()
+          info = api.model_info('rusen/sam3-browser-int8', files_metadata=True)
+          print('sha', info.sha)
+          for s in info.siblings: print('FILE', s.rfilename, s.size)
+          print(open(hf_hub_download('rusen/sam3-browser-int8', 'README.md')).read())
+          PY
+      - name: ONNX IO
+        run: |
+          python - <<'PY'
+          import onnx, os
+          from huggingface_hub import HfApi, hf_hub_download
+          api = HfApi()
+          files = [s.rfilename for s in api.model_info('rusen/sam3-browser-int8').siblings]
+          for f in files:
+              if not f.endswith('.onnx'): continue
+              p = hf_hub_download('rusen/sam3-browser-int8', f)
+              # 외부 데이터 파일 있으면 같이
+              for g in files:
+                  if g.startswith(f) and g != f: hf_hub_download('rusen/sam3-browser-int8', g)
+              m = onnx.load(p, load_external_data=False)
+              def shp(t):
+                  tt = t.type.tensor_type
+                  return onnx.TensorProto.DataType.Name(tt.elem_type), [d.dim_param or d.dim_value for d in tt.shape.dim]
+              print('=====', f, os.path.getsize(p), 'opset', [(o.domain, o.version) for o in m.opset_import])
+              for i in m.graph.input: print('  IN ', i.name, *shp(i))
+              for o in m.graph.output: print('  OUT', o.name, *shp(o))
+              ops = sorted(set(n.op_type for n in m.graph.node)); print('  OPS', ops)
+          tok = [f for f in files if 'token' in f.lower()]
+          for t in tok:
+              s = open(hf_hub_download('rusen/sam3-browser-int8', t)).read()
+              print('=====', t, len(s)); print(s[:1500])
+          PY
