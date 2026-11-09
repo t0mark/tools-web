@@ -1,28 +1,12 @@
 crossOriginIsolated: true
 TOKENIZER 43 / 43 match []
+  [dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
 node:internal/modules/run_main:123
     triggerUncaughtException(
     ^
 
-page.selectOption: Timeout 30000ms exceeded.
-Call log:
-  - waiting for locator('#ep-select')
-    - locator resolved to <select id="ep-select" class="text-input select-sm">…</select>
-  - attempting select option action
-    2 × waiting for element to be visible and enabled
-      - element is not visible
-    - retrying select option action
-    - waiting 20ms
-    2 × waiting for element to be visible and enabled
-      - element is not visible
-    - retrying select option action
-      - waiting 100ms
-    60 × waiting for element to be visible and enabled
-       - element is not visible
-     - retrying select option action
-       - waiting 500ms
-
-    at /home/runner/work/tools-web/tools-web/.github/sam3-test/e2e.mjs:33:12 {
+page.waitForFunction: Timeout 1800000ms exceeded.
+    at /home/runner/work/tools-web/tools-web/.github/sam3-test/e2e.mjs:39:14 {
   name: 'TimeoutError'
 }
 
