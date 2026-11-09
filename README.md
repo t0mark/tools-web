@@ -51,7 +51,7 @@ AAC가 아닌 오디오나 fragmented MP4 등은 파일 전체를 한 번에 디
 
 ### SAM 3 세그멘테이션 (`tools/sam3-panoptic/`)
 
-[SAM 3](https://ai.meta.com/sam3/)(Meta)로 장면 전체를 물체/배경 영역으로 나눕니다. 모델이 약 850MB라 휴대폰에서 직접 돌리지 않고 **Roboflow Serverless API**를 사용하므로, 사이트에 Roboflow 퍼블리셔블 키(공개용)가 기본으로 들어 있고, 원하면 페이지에서 본인 키로 바꿀 수 있습니다. (이 도구만 이미지를 외부 서버로 전송)
+[SAM 3](https://ai.meta.com/sam3/)(Meta)로 장면 전체를 물체/배경 영역으로 나눕니다. 모델이 약 850MB라 휴대폰에서 직접 돌리지 않고 **Roboflow Serverless API**를 사용하므로, 페이지에서 Roboflow **프라이빗** API 키를 입력해야 합니다(기기에만 저장). 퍼블리셔블 키(`rf_…`)는 서버리스 API에서 `401 not authorized for serverless inference`로 거절됩니다(2026-11 확인). (이 도구만 이미지를 외부 서버로 전송)
 
 - SAM 3는 텍스트 개념별 마스크를 주는 모델이라, 물체(things)·배경(stuff) 개념 목록을 보내고(요청당 16개씩 나눠서) 결과를 브라우저에서 하나의 파놉틱 라벨 맵으로 합칩니다.
   - 픽셀마다 한 영역만: 물체가 배경보다 우선, 같은 종류끼리는 신뢰도 높은 쪽
