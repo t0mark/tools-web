@@ -296,7 +296,7 @@
 
   // ---------- 인코딩 (워커) ----------
   function createEncoder(sampleRate, channels, kbps) {
-    const worker = new Worker('encoder.worker.js');
+    const worker = new Worker('encoder.worker.js?v=20261109c');
     state.worker = worker;
     const waiting = new Map();
     let onDone = null;

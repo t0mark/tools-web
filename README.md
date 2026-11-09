@@ -66,3 +66,7 @@ python3 -m http.server 8000
 ```
 
 `http://localhost:8000` 접속 (Web Worker 때문에 `file://`로 직접 열면 동작하지 않습니다).
+
+## 배포 시 캐시
+
+GitHub Pages는 파일을 최대 10분간 캐시합니다. JS/CSS를 수정하면 각 `index.html`의 `?v=` 값을 함께 올려서, 새 HTML이 예전 JS를 불러오는 일이 없게 합니다.
