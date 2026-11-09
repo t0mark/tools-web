@@ -30,6 +30,7 @@ const tok = await page.evaluate(async (ref) => {
 }, ref);
 console.log('TOKENIZER', tok.total - tok.bad.length, '/', tok.total, 'match', JSON.stringify(tok.bad).slice(0, 1500));
 
+await page.click('#key-card summary');
 await page.selectOption('#ep-select', 'wasm');
 for (const [i, img] of images.entries()) {
   const t = Date.now();
