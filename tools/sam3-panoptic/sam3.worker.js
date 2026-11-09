@@ -75,6 +75,11 @@ async function cachedBytes(key) {
 async function createSession(key) {
   const bytes = await cachedBytes(key);
   post({ type: 'stage', text: `${FILES[key].label} 준비 중…` });
+  const tc = performance.now();
+  try { return await createSessionInner(bytes); } finally { post({ type: 'log', text: `${key} session ${((performance.now() - tc) / 1000).toFixed(1)}s` }); }
+}
+
+async function createSessionInner(bytes) {
   const opts = { graphOptimizationLevel: 'all' };
   if (ep === 'webgpu') {
     try {
@@ -155,6 +160,8 @@ self.onmessage = async (e) => {
   try {
     if (msg.type === 'init') {
       ep = msg.ep === 'webgpu' && 'gpu' in navigator ? 'webgpu' : 'wasm';
+      if (msg.threads > 0) ort.env.wasm.numThreads = msg.threads;
+      post({ type: 'log', text: `init ep=${ep} threads=${ort.env.wasm.numThreads} isolated=${self.crossOriginIsolated}` });
       if (!textTable) textTable = await loadTextTable();
       if (!sessions.decoder) sessions.decoder = await createSession('decoder');
       if (!sessions.encoder) sessions.encoder = await createSession('encoder');

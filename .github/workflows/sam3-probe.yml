@@ -32,7 +32,8 @@ jobs:
           npx playwright install --with-deps chromium 2>&1 | tail -5
           python -m http.server 8000 >/dev/null 2>&1 &
           sleep 2
-          node .github/sam3-test/e2e.mjs cats.jpg room.jpg 2>&1 | tee .github/sam3-test/out/e2e.txt
+          timeout 1200 node .github/sam3-test/e2e.mjs 1 cats.jpg room.jpg 2>&1 | tee .github/sam3-test/out/e2e-t1.txt || true
+          timeout 900 node .github/sam3-test/e2e.mjs 4 cats.jpg 2>&1 | tee .github/sam3-test/out/e2e-t4.txt || true
       - name: Commit generated files
         if: always()
         run: |

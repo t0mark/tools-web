@@ -27,6 +27,9 @@
     'https://huggingface.co/rusen/sam3-browser-int8/resolve/970196bb75edfbcdab59567ee017673a4c53adc7/compact-448/sam3_decoder.onnx',
   ];
   const MODEL_CACHE = 'sam3-models-v1';
+  const QS = new URLSearchParams(location.search);
+  const DEBUG = QS.has('debug'); // ?debug : 워커 메시지를 콘솔에 기록
+  const FORCE_THREADS = Number(QS.get('threads')) || 0; // ?threads=1 : 스레드 수 강제
   // 참고: 퍼블리셔블 키(rf_...)는 서버리스 API에서 401 "not authorized for serverless inference"로 거절됨 → 프라이빗 키 필요
 
   const DEFAULT_THINGS = 'person, car, bicycle, motorcycle, bus, truck, dog, cat, bird, chair, table, sofa, bed, bottle, cup, laptop, cell phone, book, potted plant, tv, bag, umbrella';
@@ -233,7 +236,14 @@
   function getWorker() {
     if (worker) return workerReady;
     worker = new Worker('sam3.worker.js?v=20261109e', { type: 'module' });
-    worker.onmessage = (e) => workerHandler && workerHandler(e.data);
+    let lastLog = 0;
+    worker.onmessage = (e) => {
+      if (DEBUG && (e.data.type !== 'progress' || Date.now() - lastLog > 3000)) {
+        lastLog = Date.now();
+        console.info('[sam3-debug]', JSON.stringify(e.data, (k, v) => (v && v.byteLength > 64 ? `<${v.byteLength}B>` : v)).slice(0, 300));
+      }
+      if (workerHandler) workerHandler(e.data);
+    };
     worker.onerror = (e) => workerHandler && workerHandler({ type: 'error', message: e.message || '워커 오류' });
     workerReady = new Promise((resolve, reject) => {
       const mb = (b) => (b / 1048576).toFixed(0);
@@ -244,7 +254,7 @@
         else if (m.type === 'ready') { syncModelState(); resolve(m); }
         else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
       };
-      worker.postMessage({ type: 'init', ep: els.epSelect.value });
+      worker.postMessage({ type: 'init', ep: els.epSelect.value, threads: FORCE_THREADS });
     });
     return workerReady;
   }
