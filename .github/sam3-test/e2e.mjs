@@ -36,7 +36,13 @@ for (const [i, img] of images.entries()) {
   const t = Date.now();
   await page.setInputFiles('#file-input', img);
   await page.waitForTimeout(1000);
-  await page.waitForFunction(() => document.getElementById('loading').classList.contains('hidden'), null, { timeout: 30 * 60 * 1000, polling: 2000 });
+  let last = '';
+  for (let k = 0; k < 240; k++) { // 최대 20분, 5초마다 진행 상황 기록
+    const st = await page.evaluate(() => ({ done: document.getElementById('loading').classList.contains('hidden'), text: document.getElementById('loading-text').textContent }));
+    if (st.done) break;
+    if (st.text !== last) { console.log(`  [${((Date.now() - t) / 1000).toFixed(0)}s] ${st.text}`); last = st.text; }
+    await page.waitForTimeout(5000);
+  }
   const err = await page.evaluate(() => !document.getElementById('error-box').classList.contains('hidden') && document.getElementById('error-text').textContent);
   console.log(`E2E ${img}: ${(Date.now() - t) / 1000}s`, err ? `ERROR ${err}` : '');
   console.log('  timing:', await page.textContent('#timing'));
