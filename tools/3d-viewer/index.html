@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+  <title>3D 모델 뷰어 · Tools Web</title>
+  <link rel="icon" href="../../favicon.ico" sizes="32x32" />
+  <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Tools Web" />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="stylesheet" href="../../assets/css/base.css" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "../../vendor/three/build/three.module.js",
+        "three/addons/": "../../vendor/three/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="back-btn" href="../../" aria-label="도구 목록으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <h1>3D 모델 뷰어</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- accept를 지정하면 안드로이드 파일 선택기에서 .glb 등이 비활성화되는 경우가 있어 비워 둠 -->
+    <input id="file-input" type="file" multiple class="sr-only" />
+
+    <section id="pick-step">
+      <label class="dropzone" for="file-input" id="dropzone">
+        <div class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+        </div>
+        <strong>3D 파일 선택</strong>
+        <span>GLB · GLTF · OBJ · STL · PLY · FBX · 3MF · DAE</span>
+      </label>
+      <p class="hint">GLTF/OBJ처럼 텍스처·.bin·.mtl 파일이 따로 있으면 함께 여러 개 선택하세요.<br />파일은 기기 밖으로 전송되지 않습니다.</p>
+    </section>
+
+    <section id="view-step" class="hidden">
+      <div class="stage" id="stage">
+        <div class="stage-loading hidden" id="loading"><span class="spinner"></span><span id="loading-text">불러오는 중…</span></div>
+        <div class="stage-tools">
+          <button type="button" class="icon-btn" id="reset-view" aria-label="시점 초기화" title="시점 초기화">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="expand" aria-label="전체 화면" title="전체 화면">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+          </button>
+        </div>
+        <p class="stage-hint">한 손가락: 회전 · 두 손가락: 확대/이동</p>
+      </div>
+
+      <div class="card">
+        <div class="toggle-row">
+          <button type="button" class="chip" data-toggle="wireframe" aria-pressed="false">와이어프레임</button>
+          <button type="button" class="chip" data-toggle="grid" aria-pressed="true">바닥 격자</button>
+          <button type="button" class="chip" data-toggle="autorotate" aria-pressed="false">자동 회전</button>
+          <button type="button" class="chip" data-toggle="dark" aria-pressed="false">어두운 배경</button>
+          <button type="button" class="chip" id="zup">Z축 위로 → Y축</button>
+        </div>
+        <div id="anim-box" class="hidden">
+          <h3 class="mt">애니메이션</h3>
+          <select id="anim-select" class="select"></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>모델 정보</h3>
+        <dl class="info" id="info"></dl>
+      </div>
+
+      <label class="btn secondary" for="file-input">다른 파일 열기</label>
+    </section>
+
+    <div class="card error-card hidden" id="error-box" role="alert">
+      <strong>열지 못했어요</strong>
+      <p id="error-text"></p>
+    </div>
+
+    <p class="footnote">렌더링: <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> (MIT)</p>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

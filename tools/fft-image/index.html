@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+  <title>이미지 푸리에 변환 · Tools Web</title>
+  <link rel="icon" href="../../favicon.ico" sizes="32x32" />
+  <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="Tools Web" />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="stylesheet" href="../../assets/css/base.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="back-btn" href="../../" aria-label="도구 목록으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <h1>이미지 푸리에 변환</h1>
+    </div>
+  </header>
+
+  <main class="container">
+    <input id="file-input" type="file" accept="image/*" class="sr-only" />
+
+    <section id="pick-step">
+      <label class="dropzone" for="file-input" id="dropzone">
+        <div class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+        </div>
+        <strong>이미지 선택</strong>
+        <span>JPG · PNG · WebP 등</span>
+      </label>
+      <p class="hint">이미지를 2D 푸리에 변환해 주파수 영역을 보고, 필터를 적용한 뒤 역변환한 결과를 확인합니다.</p>
+    </section>
+
+    <section id="work-step" class="hidden">
+      <div class="views" id="views">
+        <figure class="view" data-view="orig">
+          <figcaption>원본 <small id="orig-size"></small></figcaption>
+          <div class="canvas-box"><canvas id="cv-orig"></canvas></div>
+        </figure>
+        <figure class="view" data-view="result">
+          <figcaption>역변환 결과</figcaption>
+          <div class="canvas-box"><canvas id="cv-result"></canvas></div>
+        </figure>
+        <figure class="view" data-view="spec">
+          <figcaption>주파수 스펙트럼</figcaption>
+          <div class="canvas-box"><canvas id="cv-spec"></canvas></div>
+        </figure>
+        <figure class="view" data-view="filtered">
+          <figcaption id="filtered-caption">필터 적용 스펙트럼</figcaption>
+          <div class="canvas-box"><canvas id="cv-filtered"></canvas></div>
+        </figure>
+      </div>
+      <p class="note" id="norm-note"></p>
+
+      <div class="card">
+        <h3>필터</h3>
+        <div class="segmented three" role="radiogroup">
+          <label><input type="radio" name="ftype" value="none" checked /><span><b>없음</b></span></label>
+          <label><input type="radio" name="ftype" value="low" /><span><b>저역통과</b><small>흐리게</small></span></label>
+          <label><input type="radio" name="ftype" value="high" /><span><b>고역통과</b><small>윤곽</small></span></label>
+          <label><input type="radio" name="ftype" value="bandpass" /><span><b>대역통과</b></span></label>
+          <label><input type="radio" name="ftype" value="bandstop" /><span><b>대역저지</b></span></label>
+          <label><input type="radio" name="ftype" value="draw" /><span><b>직접 그리기</b></span></label>
+        </div>
+
+        <div id="shape-ctrl" class="hidden">
+          <h3 class="mt">모양</h3>
+          <div class="segmented three" role="radiogroup">
+            <label><input type="radio" name="fshape" value="ideal" /><span><b>이상적</b><small>링잉 있음</small></span></label>
+            <label><input type="radio" name="fshape" value="gaussian" checked /><span><b>가우시안</b></span></label>
+            <label><input type="radio" name="fshape" value="butterworth" /><span><b>버터워스</b></span></label>
+          </div>
+          <div class="range-row">
+            <label for="r-cut" id="r-cut-label">차단 반경</label>
+            <input type="range" id="r-cut" min="1" max="100" value="15" />
+            <output id="r-cut-out"></output>
+          </div>
+          <div class="range-row" id="width-row">
+            <label for="r-width">대역 폭</label>
+            <input type="range" id="r-width" min="1" max="100" value="15" />
+            <output id="r-width-out"></output>
+          </div>
+        </div>
+
+        <div id="draw-ctrl" class="hidden">
+          <p class="small">스펙트럼 위를 문질러서 지울(차단할) 주파수를 칠하세요. 원점 대칭 위치도 함께 칠해집니다.</p>
+          <div class="toggle-row">
+            <button type="button" class="chip" id="brush-block" aria-pressed="true">차단 칠하기</button>
+            <button type="button" class="chip" id="brush-restore" aria-pressed="false">복원 칠하기</button>
+            <button type="button" class="chip" id="brush-reset">초기화</button>
+          </div>
+          <div class="range-row">
+            <label for="r-brush">붓 크기</label>
+            <input type="range" id="r-brush" min="1" max="40" value="8" />
+            <output id="r-brush-out"></output>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>변환 설정</h3>
+        <div class="segmented two" role="radiogroup">
+          <label><input type="radio" name="size" value="256" checked /><span><b>256×256</b><small>빠름</small></span></label>
+          <label><input type="radio" name="size" value="512" /><span><b>512×512</b><small>정밀</small></span></label>
+        </div>
+        <div class="segmented two mt" role="radiogroup">
+          <label><input type="radio" name="color" value="gray" checked /><span><b>흑백</b></span></label>
+          <label><input type="radio" name="color" value="rgb" /><span><b>컬러</b><small>RGB 채널별</small></span></label>
+        </div>
+      </div>
+
+      <details class="card explain">
+        <summary>스펙트럼 보는 법</summary>
+        <ul>
+          <li>가운데가 <b>저주파</b>(완만한 밝기 변화), 바깥쪽이 <b>고주파</b>(경계·질감·노이즈)입니다.</li>
+          <li>밝을수록 그 주파수 성분이 강합니다. 값 차이가 커서 로그 스케일로 표시합니다.</li>
+          <li>스펙트럼에 나타나는 선은 이미지 속 경계와 수직인 방향입니다.</li>
+          <li>반복 무늬 노이즈는 스펙트럼에 밝은 점으로 나타납니다. <b>직접 그리기</b>로 그 점을 지우면 노이즈가 사라집니다.</li>
+          <li>이상적 필터는 경계가 급해서 결과에 물결무늬(링잉)가 생깁니다. 가우시안은 이 현상이 없습니다.</li>
+        </ul>
+      </details>
+
+      <div class="btn-row">
+        <button type="button" class="btn" id="save-btn">결과 저장</button>
+        <label class="btn secondary" for="file-input">다른 이미지</label>
+      </div>
+    </section>
+
+    <div class="card error-card hidden" id="error-box" role="alert">
+      <strong>처리하지 못했어요</strong>
+      <p id="error-text"></p>
+    </div>
+  </main>
+
+  <dialog id="zoom" class="zoom">
+    <form method="dialog"><button class="zoom-close" aria-label="닫기">✕</button></form>
+    <img id="zoom-img" alt="" />
+    <p id="zoom-title"></p>
+  </dialog>
+
+  <script src="fft.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
