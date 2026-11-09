@@ -1,0 +1,17 @@
+prompts 37
+embeddings bytes 1213600
+REF cats.jpg 640x480 -> masks 512x384; encode 6.9s, decode 37 prompts 14.1s
+  cat: n=2 masks=(2, 1, 384, 512) >=0.3: [0.97, 0.96]
+  sofa: n=1 masks=(1, 1, 384, 512) >=0.3: [0.93]
+REF room.jpg 640x426 -> masks 512x341; encode 7.1s, decode 37 prompts 13.3s
+  person: n=2 masks=(2, 1, 341, 512) >=0.3: [0.87, 0.81]
+  chair: n=3 masks=(3, 1, 341, 512) >=0.3: [0.78, 0.76, 0.69]
+  table: n=2 masks=(2, 1, 341, 512) >=0.3: [0.86, 0.83]
+  bottle: n=1 masks=(1, 1, 341, 512) >=0.3: [0.65]
+  potted plant: n=1 masks=(1, 1, 341, 512) >=0.3: [0.75]
+  tv: n=2 masks=(2, 1, 341, 512) >=0.3: [0.95, 0.7]
+  wall: n=4 masks=(4, 1, 341, 512) >=0.3: [0.79, 0.73, 0.63, 0.59]
+  floor: n=3 masks=(3, 1, 341, 512) >=0.3: [0.72, 0.61, 0.59]
+  ceiling: n=3 masks=(3, 1, 341, 512) >=0.3: [0.73, 0.67, 0.56]
+  window: n=4 masks=(4, 1, 341, 512) >=0.3: [0.76, 0.73, 0.72, 0.63]
+  door: n=1 masks=(1, 1, 341, 512) >=0.3: [0.54]
