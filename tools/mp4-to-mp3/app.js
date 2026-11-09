@@ -1,15 +1,14 @@
 /*
  * MP4 → MP3 변환기 (완전 클라이언트 사이드)
  *
- * 1) 브라우저 내장 디코더(Web Audio decodeAudioData)로 MP4 안의 오디오 트랙(AAC 등)을 PCM으로 디코딩
- *    - 44.1kHz로 리샘플링해서 받음
- * 2) PCM → 16-bit 정수로 변환 (모노 선택 시 다운믹스)
- * 3) Web Worker에서 LAME(lamejs)로 CBR MP3 인코딩 → 진짜 MP3 비트스트림 (audio/mpeg)
+ * 1) MP4 목차(moov)만 읽어 AAC 오디오 프레임 위치를 찾고, 오디오 데이터만 골라 읽음 (mp4-audio.js)
+ *    → 1GB 넘는 동영상도 파일 전체를 메모리에 올리지 않음
+ * 2) 30초 구간씩 브라우저 내장 디코더(decodeAudioData)로 PCM 디코딩
+ * 3) 16-bit 변환(필요 시 다운믹스) 후 Web Worker의 LAME(lamejs)로 CBR MP3 인코딩 → 진짜 MP3 (audio/mpeg)
+ * MP4가 아니거나 AAC가 아니면 파일 전체를 한 번에 디코딩하는 방식으로 처리
  */
 (() => {
   'use strict';
-
-  const OUTPUT_SAMPLE_RATE = 44100;
 
   const $ = (id) => document.getElementById(id);
   const els = {
@@ -180,85 +179,165 @@
   }
 
   // ---------- 디코딩 ----------
-  async function decodeAudio(arrayBuffer) {
+  const SEGMENT_SECONDS = 30; // 한 번에 디코딩/인코딩하는 길이
+  const WARMUP_FRAMES = 3; // 구간 경계에서 AAC 디코더 상태를 맞추기 위해 앞에 겹쳐 넣는 프레임 수
+
+  function newDecodeContext(sampleRate) {
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    let ctx;
-    let closeCtx = null;
     if (OAC) {
-      ctx = new OAC(2, 1, OUTPUT_SAMPLE_RATE);
-    } else {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      ctx = new AC({ sampleRate: OUTPUT_SAMPLE_RATE });
-      closeCtx = () => ctx.close();
+      try { return { ctx: new OAC(2, 1, sampleRate), close() {} }; } catch (e) { /* 아래로 */ }
     }
-    try {
-      return await new Promise((resolve, reject) => {
-        // 구형 Safari는 콜백 방식만 지원
-        const p = ctx.decodeAudioData(arrayBuffer, resolve, reject);
-        if (p && typeof p.then === 'function') p.then(resolve, reject);
-      });
-    } finally {
-      if (closeCtx) closeCtx().catch(() => {});
-    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC({ sampleRate });
+    return { ctx, close() { ctx.close().catch(() => {}); } };
   }
 
-  // 5.1ch 등 3채널 이상은 Web Audio 표준 다운믹스로 스테레오/모노로 렌더링
-  async function downmixWithWebAudio(buffer, outChannels) {
-    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    const ctx = new OAC(outChannels, buffer.length, buffer.sampleRate);
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.connect(ctx.destination);
-    src.start();
-    return ctx.startRendering();
-  }
-
-  function floatToInt16(input, output) {
-    for (let i = 0; i < input.length; i++) {
-      const s = input[i];
-      output[i] = s < 0 ? Math.max(-32768, s * 32768) : Math.min(32767, s * 32767);
-    }
-    return output;
-  }
-
-  // AudioBuffer → 채널별 Int16Array
-  function toPcm16(buffer, outChannels) {
-    const len = buffer.length;
-    if (outChannels === 1 && buffer.numberOfChannels > 1) {
-      const l = buffer.getChannelData(0);
-      const r = buffer.getChannelData(1);
-      const out = new Int16Array(len);
-      for (let i = 0; i < len; i++) {
-        const s = (l[i] + r[i]) * 0.5;
-        out[i] = s < 0 ? Math.max(-32768, s * 32768) : Math.min(32767, s * 32767);
-      }
-      return [out];
-    }
-    const result = [];
-    for (let c = 0; c < outChannels; c++) {
-      result.push(floatToInt16(buffer.getChannelData(c), new Int16Array(len)));
-    }
-    return result;
-  }
-
-  // ---------- 인코딩 ----------
-  function encodeInWorker(channels, sampleRate, kbps, onProgress) {
+  function decodeWith(ctx, arrayBuffer) {
     return new Promise((resolve, reject) => {
-      const worker = new Worker('encoder.worker.js');
-      state.worker = worker;
-      worker.onmessage = (e) => {
-        const msg = e.data;
-        if (msg.type === 'progress') onProgress(msg.value);
-        else if (msg.type === 'done') { worker.terminate(); state.worker = null; resolve(msg.blob); }
-        else if (msg.type === 'error') { worker.terminate(); state.worker = null; reject(new Error(msg.message)); }
-      };
-      worker.onerror = (e) => {
-        worker.terminate();
-        state.worker = null;
-        reject(new Error(e.message || '인코더를 불러오지 못했습니다.'));
-      };
-      worker.postMessage({ channels, sampleRate, kbps }, channels.map((c) => c.buffer));
+      // 구형 Safari는 콜백 방식만 지원
+      const p = ctx.decodeAudioData(arrayBuffer, resolve, reject);
+      if (p && typeof p.then === 'function') p.then(resolve, reject);
     });
+  }
+
+  function channelsOf(buffer, start = 0, end = buffer.length) {
+    const out = [];
+    for (let c = 0; c < buffer.numberOfChannels; c++) out.push(buffer.getChannelData(c).subarray(start, end));
+    return out;
+  }
+
+  /*
+   * 오디오 소스: { sampleRate, segments() } — segments()는 { channels: Float32Array[], progress } 를 차례로 내놓는다.
+   * 1순위: MP4/MOV의 AAC 트랙만 직접 꺼내서 구간별로 디코딩 (대용량 파일도 OK)
+   * 2순위: 파일 전체를 브라우저 디코더에 통째로 넘김 (작은 파일, 기타 형식)
+   */
+  async function openMp4Source(file) {
+    let track = null;
+    try { track = await window.Mp4Audio.open(file); } catch (e) { console.warn('MP4 파싱 실패', e); }
+    if (!track) return null;
+
+    const rate = track.decodeRate;
+    const spf = track.samplesPerFrame;
+    const framesPerSeg = Math.max(1, Math.round((SEGMENT_SECONDS * rate) / spf));
+
+    return {
+      kind: 'mp4',
+      sampleRate: rate,
+      async *segments() {
+        const dec = newDecodeContext(rate);
+        try {
+          for (let s = 0; s < track.count; s += framesPerSeg) {
+            const e = Math.min(track.count, s + framesPerSeg);
+            const from = Math.max(0, s - WARMUP_FRAMES);
+            const adts = await track.buildAdts(from, e);
+            const audio = await decodeWith(dec.ctx, adts);
+            // 겹쳐 넣은 앞부분은 버리고, 이 구간 프레임에 해당하는 끝부분만 사용
+            const want = Math.round((e - s) * spf);
+            const start = s === 0 ? 0 : Math.max(0, audio.length - want);
+            yield { channels: channelsOf(audio, start), progress: e / track.count };
+          }
+        } finally {
+          dec.close();
+        }
+      },
+    };
+  }
+
+  async function openWholeFileSource(file, onStage) {
+    onStage('파일 읽는 중…');
+    let data = await file.arrayBuffer();
+    onStage('오디오 추출 중…');
+    const dec = newDecodeContext(44100);
+    let audio;
+    try {
+      audio = await decodeWith(dec.ctx, data);
+    } catch (err) {
+      throw new Error('이 파일에서 오디오를 읽을 수 없습니다. 오디오 트랙이 없거나 브라우저가 지원하지 않는 코덱일 수 있습니다.');
+    } finally {
+      dec.close();
+      data = null;
+    }
+    if (!audio || audio.length === 0) throw new Error('오디오 트랙이 비어 있습니다.');
+    const step = audio.sampleRate * SEGMENT_SECONDS;
+    return {
+      kind: 'whole',
+      sampleRate: audio.sampleRate,
+      async *segments() {
+        for (let s = 0; s < audio.length; s += step) {
+          const e = Math.min(audio.length, s + step);
+          yield { channels: channelsOf(audio, s, e), progress: e / audio.length };
+        }
+      },
+    };
+  }
+
+  const clip16 = (s) => (s < 0 ? Math.max(-32768, s * 32768) : Math.min(32767, s * 32767));
+
+  // 채널별 Float32 → 출력 채널 수에 맞게 다운믹스 + 16-bit 변환 (Web Audio 표준 다운믹스 계수)
+  function toPcm16(chs, outCh) {
+    const n = chs.length;
+    const len = chs[0].length;
+    const L = new Int16Array(len);
+    const R = outCh === 2 ? new Int16Array(len) : null;
+    const [c0, c1, c2, , c4, c5] = chs; // 5.1: L R C LFE SL SR
+    const k = Math.SQRT1_2;
+    for (let i = 0; i < len; i++) {
+      let l, r;
+      if (n === 1) { l = r = c0[i]; }
+      else if (n >= 6) { l = c0[i] + k * (c2[i] + c4[i]); r = c1[i] + k * (c2[i] + c5[i]); }
+      else if (n === 4) { l = 0.5 * (c0[i] + c2[i]); r = 0.5 * (c1[i] + chs[3][i]); }
+      else { l = c0[i]; r = c1[i]; }
+      if (R) { L[i] = clip16(l); R[i] = clip16(r); }
+      else if (n >= 6) { L[i] = clip16(k * (c0[i] + c1[i]) + c2[i] + 0.5 * (c4[i] + c5[i])); }
+      else { L[i] = clip16(n === 1 ? l : 0.5 * (l + r)); }
+    }
+    return R ? [L, R] : [L];
+  }
+
+  // ---------- 인코딩 (워커) ----------
+  function createEncoder(sampleRate, channels, kbps) {
+    const worker = new Worker('encoder.worker.js');
+    state.worker = worker;
+    const waiting = new Map();
+    let onDone = null;
+    let failed = null;
+    const fail = (err) => {
+      failed = err;
+      for (const w of waiting.values()) w.reject(err);
+      waiting.clear();
+      if (onDone) onDone.reject(err);
+    };
+    worker.onmessage = (e) => {
+      const msg = e.data;
+      if (msg.type === 'ack') { waiting.get(msg.id).resolve(); waiting.delete(msg.id); }
+      else if (msg.type === 'done') onDone.resolve(msg.blob);
+      else if (msg.type === 'error') fail(new Error(msg.message));
+    };
+    worker.onerror = (e) => fail(new Error(e.message || '인코더를 불러오지 못했습니다.'));
+    worker.postMessage({ type: 'init', sampleRate, channels, kbps });
+
+    let nextId = 0;
+    return {
+      push(pcm) {
+        if (failed) return Promise.reject(failed);
+        const id = nextId++;
+        return new Promise((resolve, reject) => {
+          waiting.set(id, { resolve, reject });
+          worker.postMessage({ type: 'chunk', id, pcm }, pcm.map((c) => c.buffer));
+        });
+      },
+      end() {
+        if (failed) return Promise.reject(failed);
+        return new Promise((resolve, reject) => {
+          onDone = { resolve, reject };
+          worker.postMessage({ type: 'end' });
+        });
+      },
+      terminate() {
+        worker.terminate();
+        if (state.worker === worker) state.worker = null;
+      },
+    };
   }
 
   class CancelledError extends Error {}
@@ -272,54 +351,55 @@
     const jobId = ++state.jobId;
     const ensureActive = () => { if (jobId !== state.jobId) throw new CancelledError(); };
     const { kbps, channels: wantChannels } = getSettings();
+    const onStage = (t) => { ensureActive(); setProgress(t, null); };
 
     showStep(els.progressStep);
+    let encoder = null;
     try {
-      setProgress('파일 읽는 중…', null);
-      let data = await file.arrayBuffer();
+      setProgress('파일 분석 중…', null);
+      let source = await openMp4Source(file);
+      ensureActive();
+      if (!source) source = await openWholeFileSource(file, onStage);
+      console.info('[mp4-to-mp3] source:', source.kind, source.sampleRate);
       ensureActive();
 
-      setProgress('오디오 추출 중…', null);
-      let audio;
-      try {
-        audio = await decodeAudio(data);
-      } catch (err) {
-        throw new Error('이 파일에서 오디오를 읽을 수 없습니다. 오디오 트랙이 없거나 브라우저가 지원하지 않는 코덱일 수 있습니다.');
-      }
-      data = null;
-      ensureActive();
-
-      if (!audio || audio.length === 0) {
-        throw new Error('오디오 트랙이 비어 있습니다.');
-      }
-
-      const outChannels = Math.min(wantChannels, audio.numberOfChannels);
-      if (audio.numberOfChannels > 2) {
-        setProgress('채널 다운믹스 중…', null);
-        audio = await downmixWithWebAudio(audio, outChannels);
+      setProgress('MP3 변환 중…', 0);
+      let outCh = 0;
+      let samples = 0;
+      let pending = Promise.resolve();
+      for await (const seg of source.segments()) {
         ensureActive();
+        if (!encoder) {
+          outCh = Math.min(wantChannels, seg.channels.length);
+          encoder = createEncoder(source.sampleRate, outCh, kbps);
+        }
+        const pcm = toPcm16(seg.channels, outCh);
+        samples += pcm[0].length;
+        await pending; // 워커가 이전 구간을 끝낼 때까지 대기 (메모리 사용량 제한)
+        ensureActive();
+        pending = encoder.push(pcm);
+        setProgress('MP3 변환 중…', seg.progress * 0.98);
       }
-
-      const sampleRate = audio.sampleRate;
-      const duration = audio.duration;
-      let pcm = toPcm16(audio, outChannels);
-      audio = null; // 메모리 해제
-
-      setProgress('MP3 인코딩 중…', 0);
-      const blob = await encodeInWorker(pcm, sampleRate, kbps, (r) => {
-        if (jobId === state.jobId) setProgress('MP3 인코딩 중…', r);
-      });
-      pcm = null;
+      if (!encoder || samples === 0) throw new Error('오디오 트랙이 비어 있습니다.');
+      await pending;
+      ensureActive();
+      setProgress('마무리 중…', 0.99);
+      const blob = await encoder.end();
+      encoder.terminate();
       ensureActive();
 
-      showResult(file, blob, duration);
+      showResult(file, blob, samples / source.sampleRate);
     } catch (err) {
+      if (encoder) encoder.terminate();
       if (err instanceof CancelledError) return;
       console.error(err);
       showStep(els.configStep);
       let msg = (err && err.message) || String(err);
+      if (err && (err.name === 'EncodingError' || err.name === 'NotSupportedError')) {
+        msg = '이 파일에서 오디오를 읽을 수 없습니다. 오디오 트랙이 없거나 브라우저가 지원하지 않는 코덱일 수 있습니다.';
+      }
       if (err && (err.name === 'NotReadableError' || /memory|allocation|RangeError/i.test(msg + err.name))) {
-        msg = '파일이 너무 커서 기기 메모리가 부족합니다. 더 짧은 영상으로 시도해주세요.';
+        msg = '기기 메모리가 부족합니다. 다른 앱을 닫고 다시 시도하거나 더 짧은 영상으로 시도해주세요.';
       }
       showError(msg);
     }
