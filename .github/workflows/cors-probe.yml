@@ -1,0 +1,23 @@
+# 임시: Roboflow 서버리스 API의 CORS 헤더 확인 (가짜 키 사용)
+name: cors-probe
+on:
+  push:
+    branches: [ccr-34ba176c-p38il1]
+    paths: [.github/workflows/cors-probe.yml]
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          U='https://serverless.roboflow.com/sam3/concept_segment?api_key=dummy'
+          for O in https://t0mark.github.io https://app.roboflow.com https://roboflow.com http://localhost:3000; do
+            echo "===== Origin: $O"
+            echo "--- OPTIONS (preflight)"
+            curl -s -o /dev/null -D - -X OPTIONS "$U" -H "Origin: $O" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" | grep -iv '^date\|^server-timing\|^cf-\|^alt-svc'
+            echo "--- POST json"
+            curl -s -D - -o body.txt -X POST "$U" -H "Origin: $O" -H "Content-Type: application/json" -d '{"image":{"type":"url","value":"https://media.roboflow.com/notebooks/examples/dog.jpeg"},"prompts":[{"type":"text","text":"dog"}]}' | grep -iv '^date\|^server-timing\|^cf-\|^alt-svc'; head -c 200 body.txt; echo
+          done
+          echo "===== other hosts (OPTIONS from t0mark.github.io)"
+          for H in https://detect.roboflow.com/ https://outline.roboflow.com/ https://infer.roboflow.com/ https://api.roboflow.com/; do
+            echo "--- $H"; curl -s -o /dev/null -D - -X OPTIONS "$H" -H "Origin: https://t0mark.github.io" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" | grep -i '^HTTP\|access-control'
+          done
