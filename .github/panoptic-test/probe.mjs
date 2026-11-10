@@ -7,7 +7,6 @@ import fs from 'node:fs';
 const images = process.argv.slice(2);
 const candidates = [
   ['Xenova/detr-resnet-50-panoptic', 'q8'], ['Xenova/detr-resnet-50-panoptic', 'fp32'],
-  ['Xenova/detr-resnet-101-panoptic', 'q8'],
   ['onnx-community/maskformer-swin-tiny-coco', 'q8'], ['onnx-community/maskformer-swin-tiny-coco', 'fp32'],
   ['onnx-community/maskformer-swin-small-coco', 'q8'],
   ['onnx-community/maskformer-swin-base-coco', 'q8'], ['onnx-community/maskformer-swin-base-coco', 'fp32'],
@@ -19,9 +18,10 @@ for (const [model, dtype] of candidates) {
     const tLoad = Date.now() - t0;
     for (const img of images) {
       const image = await RawImage.read(img);
-      await seg(image, { subtask: 'panoptic' }); // 워밍업
+      let opts = { subtask: 'panoptic' };
+      try { await seg(image, opts); } catch (e) { console.log('   panoptic subtask failed:', String(e.stack).split('\n').slice(0, 6).join(' | ')); opts = {}; await seg(image, opts); }
       const t1 = Date.now();
-      const out = await seg(image, { subtask: 'panoptic' });
+      const out = await seg(image, opts);
       const dt = Date.now() - t1;
       // 덮인 픽셀 비율
       const w = image.width, h = image.height;
@@ -34,6 +34,6 @@ for (const [model, dtype] of candidates) {
     const dir = `${env.cacheDir}/${model}/onnx`;
     if (fs.existsSync(dir)) console.log('   files:', fs.readdirSync(dir).map((f) => `${f} ${(fs.statSync(`${dir}/${f}`).size / 1e6).toFixed(1)}MB`).join(', '));
   } catch (e) {
-    console.log(`FAIL ${model} [${dtype}]: ${String(e.message).slice(0, 200)}`);
+    console.log(`FAIL ${model} [${dtype}]: ${String(e.stack).split('\n').slice(0, 8).join(' | ').slice(0, 900)}`);
   }
 }
