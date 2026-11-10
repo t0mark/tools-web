@@ -1,8 +1,91 @@
-FAIL Xenova/detr-resnet-50-panoptic [q8]: fn2 is not a function
-FAIL Xenova/detr-resnet-50-panoptic [fp32]: fn2 is not a function
-FAIL Xenova/detr-resnet-101-panoptic [q8]: Unauthorized access to file: "https://huggingface.co/Xenova/detr-resnet-101-panoptic/resolve/main/config.json".
-FAIL onnx-community/maskformer-swin-tiny-coco [q8]: fn2 is not a function
-FAIL onnx-community/maskformer-swin-tiny-coco [fp32]: fn2 is not a function
-FAIL onnx-community/maskformer-swin-small-coco [q8]: fn2 is not a function
-FAIL onnx-community/maskformer-swin-base-coco [q8]: fn2 is not a function
-FAIL onnx-community/maskformer-swin-base-coco [fp32]: fn2 is not a function
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [q8] load 1234ms | ../cats.jpg 640x480: 9117ms, 1 segs, covered 96.9% :: cat(1.00)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [q8] load 1234ms | ../room.jpg 640x426: 8344ms, 9 segs, covered 85.5% :: chair(0.99), bottle(0.87), potted plant(0.97), potted plant(0.99), vase(0.99), mirror-stuff(0.76), tv(1.00), microwave(0.84), potted plant(0.58)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [q8] load 1234ms | ../street.jpg 640x425: 7836ms, 1 segs, covered 100.0% :: person(1.00)
+   files: model_quantized.onnx 44.5MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [fp32] load 1206ms | ../cats.jpg 640x480: 10695ms, 5 segs, covered 98.2% :: cat(0.99), remote(1.00), remote(1.00), couch(0.99), cat(1.00)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [fp32] load 1206ms | ../room.jpg 640x426: 10044ms, 22 segs, covered 94.1% :: window-other(0.98), bottle(0.93), potted plant(0.99), person(1.00), potted plant(0.82), LABEL_186(0.99), LABEL_199(0.99), vase(0.99), tv(0.68), floor-wood(0.99), vase(0.96), clock(0.99), chair(1.00), potted plant(0.94), light(0.98), LABEL_200(0.96), shelf(0.91), dining table(0.98), tv(1.00), microwave(0.89), refrigerator(0.98), LABEL_190(0.87)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK Xenova/detr-resnet-50-panoptic [fp32] load 1206ms | ../street.jpg 640x425: 9290ms, 4 segs, covered 100.0% :: skis(0.99), snow(1.00), LABEL_187(0.99), person(1.00)
+   files: model.onnx 172.3MB, model_quantized.onnx 44.5MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [q8] load 2512ms | ../cats.jpg 640x480: 5074ms, 7 segs, covered 100.0% :: couch(0.96), cat(1.00), blanket(0.80), cat(0.99), remote(0.97), pillow(0.73), remote(1.00)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [q8] load 2512ms | ../room.jpg 640x426: 5323ms, 34 segs, covered 99.3% :: dining table(0.99), dining table(0.69), wall-other-merged(1.00), cabinet-merged(0.99), floor-wood(1.00), tv(0.97), chair(0.79), chair(0.97), chair(0.97), counter(0.76), table-merged(0.96), person(0.66), chair(0.98), bottle(0.77), potted plant(0.93), refrigerator(0.98), light(0.98), wine glass(0.96), ceiling-merged(0.99), chair(0.96), potted plant(0.91), person(1.00), chair(1.00), window-other(0.96
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [q8] load 2512ms | ../street.jpg 640x425: 4303ms, 4 segs, covered 100.0% :: sky-other-merged(1.00), person(1.00), skis(1.00), snow(1.00)
+   files: model_quantized.onnx 48.0MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [fp32] load 2352ms | ../cats.jpg 640x480: 6624ms, 7 segs, covered 100.0% :: couch(0.96), cat(1.00), blanket(0.82), cat(0.99), remote(0.98), pillow(0.72), remote(1.00)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [fp32] load 2352ms | ../room.jpg 640x426: 6635ms, 33 segs, covered 99.4% :: dining table(0.99), dining table(0.72), wall-other-merged(1.00), cabinet-merged(0.99), floor-wood(1.00), tv(0.93), chair(0.96), chair(0.97), counter(0.75), table-merged(0.96), bottle(0.80), potted plant(0.94), refrigerator(0.98), light(0.98), wine glass(0.96), ceiling-merged(0.99), potted plant(0.94), person(1.00), chair(0.99), potted plant(0.73), window-other(0.96), shelf(0.91), tv(1.00), vase(0.
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-tiny-coco [fp32] load 2352ms | ../street.jpg 640x425: 5637ms, 4 segs, covered 100.0% :: sky-other-merged(1.00), person(1.00), skis(1.00), snow(1.00)
+   files: model.onnx 171.1MB, model_quantized.onnx 48.0MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-small-coco [q8] load 4980ms | ../cats.jpg 640x480: 7035ms, 6 segs, covered 100.0% :: remote(0.99), cat(1.00), couch(0.98), remote(1.00), cat(1.00), blanket(0.64)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-small-coco [q8] load 4980ms | ../room.jpg 640x426: 7087ms, 35 segs, covered 96.4% :: vase(0.98), vase(0.90), dining table(0.59), vase(0.98), clock(0.90), window-other(0.98), floor-other-merged(0.99), chair(1.00), vase(0.58), counter(0.66), chair(0.98), chair(1.00), wall-other-merged(1.00), person(1.00), cabinet-merged(1.00), rug-merged(0.94), potted plant(0.51), potted plant(0.99), tv(1.00), flower(0.89), ceiling-merged(0.99), chair(1.00), chair(0.98), potted plant(0.93), dining t
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-small-coco [q8] load 4980ms | ../street.jpg 640x425: 6047ms, 4 segs, covered 100.0% :: person(1.00), skis(1.00), sky-other-merged(1.00), snow(1.00)
+   files: model_quantized.onnx 74.4MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [q8] load 5257ms | ../cats.jpg 640x480: 11141ms, 4 segs, covered 100.0% :: remote(0.97), cat(1.00), remote(1.00), cat(0.99)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [q8] load 5257ms | ../room.jpg 640x426: 10647ms, 35 segs, covered 99.9% :: refrigerator(0.93), flower(0.91), chair(0.97), potted plant(0.92), ceiling-merged(0.99), wall-wood(0.59), rug-merged(0.99), vase(0.79), microwave(0.94), dining table(1.00), chair(1.00), tv(1.00), cabinet-merged(0.99), floor-wood(1.00), potted plant(0.99), person(0.87), vase(0.99), chair(1.00), counter(0.57), tv(0.95), vase(0.96), person(1.00), vase(0.98), shelf(0.96), dining table(0.61), chair(0.9
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [q8] load 5257ms | ../street.jpg 640x425: 9601ms, 4 segs, covered 100.0% :: sky-other-merged(1.00), skis(1.00), person(1.00), snow(1.00)
+   files: model_quantized.onnx 141.8MB
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [fp32] load 6494ms | ../cats.jpg 640x480: 14886ms, 4 segs, covered 100.0% :: remote(0.98), cat(1.00), remote(1.00), cat(0.99)
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [fp32] load 6494ms | ../room.jpg 640x426: 13874ms, 34 segs, covered 99.9% :: refrigerator(0.96), flower(0.91), chair(0.97), potted plant(0.93), ceiling-merged(0.99), wall-wood(0.67), rug-merged(0.99), vase(0.72), microwave(0.97), dining table(1.00), vase(0.99), chair(1.00), tv(1.00), cabinet-merged(0.99), floor-wood(1.00), potted plant(0.99), person(0.87), chair(1.00), tv(0.95), vase(0.96), person(1.00), vase(0.98), shelf(0.96), dining table(0.64), chair(0.92), floor-other
+   panoptic subtask failed: TypeError: fn2 is not a function |     at Function._call (file:///home/runner/work/tools-web/tools-web/p/node_modules/@huggingface/transformers/dist/transformers.node.mjs:34131:25) |     at async file:///home/runner/work/tools-web/tools-web/p/probe.mjs:22:13
+`label_ids_to_fuse` unset. No instance will be fused.
+`label_ids_to_fuse` unset. No instance will be fused.
+OK onnx-community/maskformer-swin-base-coco [fp32] load 6494ms | ../street.jpg 640x425: 12793ms, 4 segs, covered 100.0% :: sky-other-merged(1.00), skis(1.00), person(1.00), snow(1.00)
+   files: model.onnx 443.0MB, model_quantized.onnx 141.8MB
