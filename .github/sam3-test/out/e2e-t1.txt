@@ -1,0 +1,42 @@
+crossOriginIsolated: true
+TOKENIZER 43 / 43 match []
+  [5s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
+  [5s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261109e
+  [5s console.info] [sam3-debug] {"type":"log","text":"init ep=wasm threads=1 isolated=true"}
+  [5s console.info] [sam3] init ep=wasm threads=1 isolated=true
+  [6s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
+  [8s console.info] [sam3-debug] {"type":"log","text":"decoder session 2.1s"}
+  [8s console.info] [sam3] decoder session 2.1s
+  [11s console.info] [sam3-debug] {"type":"progress","key":"encoder","label":"이미지 모델","loaded":223729615,"total":461907426}
+  [14s console.info] [sam3-debug] {"type":"log","text":"캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error."}
+  [14s console.info] [sam3] 캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error.
+  [14s console.info] [sam3-debug] {"type":"stage","text":"이미지 모델 준비 중…"}
+  [15s console.info] [sam3-debug] {"type":"log","text":"encoder session 0.8s"}
+  [15s console.info] [sam3] encoder session 0.8s
+  [15s console.info] [sam3-debug] {"type":"error","message":"Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0"}
+  [15s console.error] Error: Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
+    at workerHandler (http://localhost:8000/tools/sam3-panoptic/app.js?v=20261109e:255:62)
+  
+E2E threads=1 cats.jpg: 11.016s ERROR Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
+  timing: 
+  legend: 
+  [16s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
+  [16s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261109e
+  [16s console.info] [sam3-debug] {"type":"log","text":"init ep=wasm threads=1 isolated=true"}
+  [16s console.info] [sam3] init ep=wasm threads=1 isolated=true
+  [16s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
+  [18s console.info] [sam3-debug] {"type":"log","text":"decoder session 2.3s"}
+  [18s console.info] [sam3] decoder session 2.3s
+  [21s console.info] [sam3-debug] {"type":"progress","key":"encoder","label":"이미지 모델","loaded":223704403,"total":461907426}
+  [24s console.info] [sam3-debug] {"type":"log","text":"캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error."}
+  [24s console.info] [sam3] 캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error.
+  [24s console.info] [sam3-debug] {"type":"stage","text":"이미지 모델 준비 중…"}
+  [25s console.info] [sam3-debug] {"type":"log","text":"encoder session 0.8s"}
+  [25s console.info] [sam3] encoder session 0.8s
+  [25s console.info] [sam3-debug] {"type":"error","message":"Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0"}
+  [25s console.error] Error: Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
+    at workerHandler (http://localhost:8000/tools/sam3-panoptic/app.js?v=20261109e:255:62)
+  
+E2E threads=1 room.jpg: 11.013s ERROR Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
+  timing: 
+  legend: 

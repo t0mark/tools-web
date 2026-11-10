@@ -1,9 +1,9 @@
 prompts 37
 embeddings bytes 1213600
-REF cats.jpg 640x480 -> masks 512x384; encode 6.4s, decode 37 prompts 12.2s
+REF cats.jpg 640x480 -> masks 512x384; encode 5.6s, decode 37 prompts 10.6s
   cat: n=2 masks=(2, 1, 384, 512) >=0.3: [0.97, 0.96]
   sofa: n=1 masks=(1, 1, 384, 512) >=0.3: [0.93]
-REF room.jpg 640x426 -> masks 512x341; encode 6.4s, decode 37 prompts 12.0s
+REF room.jpg 640x426 -> masks 512x341; encode 5.7s, decode 37 prompts 10.6s
   person: n=2 masks=(2, 1, 341, 512) >=0.3: [0.87, 0.81]
   chair: n=3 masks=(3, 1, 341, 512) >=0.3: [0.78, 0.77, 0.69]
   table: n=2 masks=(2, 1, 341, 512) >=0.3: [0.86, 0.83]
