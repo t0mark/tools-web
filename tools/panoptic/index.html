@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
-  <title>SAM 3 파놉틱 세그멘테이션 · Tools Web</title>
+  <title>파놉틱 세그멘테이션 · Tools Web</title>
   <link rel="icon" href="../../favicon.ico" sizes="32x32" />
   <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Tools Web" />
   <link rel="manifest" href="../../manifest.webmanifest" />
-  <link rel="stylesheet" href="../../assets/css/base.css?v=20261109d" />
-  <link rel="stylesheet" href="style.css?v=20261110c" />
+  <link rel="stylesheet" href="../../assets/css/base.css?v=20261110d" />
+  <link rel="stylesheet" href="style.css?v=20261110d" />
 </head>
 <body>
   <header class="topbar">
@@ -20,23 +20,12 @@
       <a class="back-btn" href="../../" aria-label="도구 목록으로">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </a>
-      <h1>SAM 3 세그멘테이션</h1>
+      <h1>파놉틱 세그멘테이션</h1>
     </div>
   </header>
 
   <main class="container">
     <input id="file-input" type="file" accept="image/*" class="sr-only" />
-
-    <!-- 비밀번호 -->
-    <details class="card key-card" id="key-card">
-      <summary><span>비밀번호</span><span class="key-state missing" id="key-state">잠김</span></summary>
-      <p class="small">Roboflow의 SAM 3 서버로 이미지를 보내 분석합니다. 비밀번호를 입력하면 사용할 수 있어요.</p>
-      <div class="pw-row">
-        <input type="password" id="password" class="text-input" inputmode="numeric" autocomplete="current-password" placeholder="비밀번호" />
-        <button type="button" class="btn pw-btn" id="unlock-btn">확인</button>
-      </div>
-      <label class="check"><input type="checkbox" id="remember-pw" checked /> 이 기기에서 기억</label>
-    </details>
 
     <section id="pick-step">
       <label class="dropzone" for="file-input" id="dropzone">
@@ -44,17 +33,21 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/><path d="m2 18 10 5 10-5" opacity=".5"/></svg>
         </div>
         <strong>이미지 선택</strong>
-        <span>장면 전체를 영역별로 나눠서 보여줍니다</span>
+        <span>사진의 모든 픽셀을 물체·배경 종류별로 나눠요</span>
       </label>
+      <p class="hint">기기 안에서 처리되며 사진이 밖으로 전송되지 않아요.<br />처음 한 번 모델(약 48MB)을 내려받아요.</p>
     </section>
 
     <section id="work-step" class="hidden">
       <div class="stage">
         <canvas id="cv"></canvas>
-        <div class="stage-loading hidden" id="loading"><span class="spinner"></span><span id="loading-text">분석 중…</span></div>
+        <div class="stage-loading hidden" id="loading">
+          <span class="spinner"></span><span id="loading-text">분석 중…</span>
+          <div class="progress hidden" id="progress"><div class="progress-bar" id="progress-bar"></div></div>
+        </div>
       </div>
 
-      <div class="card" id="view-card">
+      <div class="card">
         <div class="toggle-row">
           <button type="button" class="chip" data-toggle="labels" aria-pressed="true">라벨</button>
           <button type="button" class="chip" data-toggle="borders" aria-pressed="true">경계선</button>
@@ -65,11 +58,6 @@
           <input type="range" id="r-alpha" min="0" max="100" value="55" />
           <output id="r-alpha-out"></output>
         </div>
-        <div class="range-row">
-          <label for="r-thresh">신뢰도 기준</label>
-          <input type="range" id="r-thresh" min="30" max="95" value="50" />
-          <output id="r-thresh-out"></output>
-        </div>
       </div>
 
       <div class="card">
@@ -79,20 +67,10 @@
         <p class="small" id="timing"></p>
       </div>
 
-      <details class="card">
-        <summary class="summary">찾을 대상 (영어 단어, 쉼표로 구분)</summary>
-        <h3 class="mt">물체 — 하나하나 따로 구분</h3>
-        <textarea id="things" class="text-input" rows="4" spellcheck="false"></textarea>
-        <h3 class="mt">배경 — 같은 종류는 하나의 영역</h3>
-        <textarea id="stuff" class="text-input" rows="3" spellcheck="false"></textarea>
-        <button type="button" class="chip mt" id="reset-prompts">기본값으로</button>
-      </details>
-
       <div class="btn-row">
-        <button type="button" class="btn" id="run-btn">다시 분석</button>
-        <button type="button" class="btn secondary" id="save-btn">이미지 저장</button>
+        <button type="button" class="btn" id="save-btn">이미지 저장</button>
+        <label class="btn secondary" for="file-input">다른 이미지</label>
       </div>
-      <label class="btn secondary mt" for="file-input">다른 이미지</label>
     </section>
 
     <div class="card error-card hidden" id="error-box" role="alert">
@@ -100,10 +78,10 @@
       <p id="error-text"></p>
     </div>
 
-    <p class="footnote">이 도구는 다른 도구와 달리 이미지를 Roboflow 서버로 전송합니다.<br />
-      모델: <a href="https://ai.meta.com/sam3/" target="_blank" rel="noopener">SAM 3</a> (Meta) · 추론: Roboflow Serverless API</p>
+    <p class="footnote">모델: <a href="https://huggingface.co/onnx-community/maskformer-swin-tiny-coco" target="_blank" rel="noopener">MaskFormer Swin-Tiny</a> (COCO 파놉틱 133종) ·
+      실행: <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">transformers.js</a></p>
   </main>
 
-  <script src="app.js?v=20261110c"></script>
+  <script src="app.js?v=20261110d"></script>
 </body>
 </html>

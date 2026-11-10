@@ -1,37 +1,4 @@
-.key-card { padding: 0; }
-.key-card > summary {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px;
-  cursor: pointer;
-  font-weight: 600;
-  list-style: none;
-}
-.key-card > summary::-webkit-details-marker { display: none; }
-.key-card[open] > summary { padding-bottom: 4px; }
-.key-card > :not(summary) { margin-left: 16px; margin-right: 16px; }
-.key-card > :last-child { margin-bottom: 16px; }
-.key-card > .text-input { width: calc(100% - 32px); }
-.key-state { font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--surface-2); color: var(--text-sub); }
-.key-state.ok { background: color-mix(in srgb, var(--success) 18%, transparent); color: var(--success); }
-.key-state.missing { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
-
-.text-input {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 16px; /* iOS 확대 방지 */
-  resize: vertical;
-}
-.check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--text-sub); }
 .small { font-size: 13px; color: var(--text-sub); margin: 8px 0 12px; }
-.small a { color: var(--accent); }
-.summary { cursor: pointer; font-weight: 600; color: var(--text-sub); font-size: 15px; }
-.mt { margin-top: 16px !important; }
 
 .stage {
   position: relative;
@@ -47,6 +14,8 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
   background: rgba(0, 0, 0, 0.45);
   color: #fff; font-weight: 600;
+  text-align: center;
+  padding: 0 16px;
 }
 .spinner {
   width: 32px; height: 32px;
@@ -56,6 +25,8 @@
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.progress { width: min(70%, 260px); height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.25); overflow: hidden; }
+.progress-bar { height: 100%; width: 0; background: #fff; border-radius: inherit; transition: width 0.2s; }
 
 .card h3 small { font-weight: 400; }
 .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -77,7 +48,3 @@
 .legend .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .legend .kind { font-size: 11px; color: var(--text-sub); font-weight: 600; margin-left: 4px; }
 .legend .meta { flex: none; color: var(--text-sub); font-variant-numeric: tabular-nums; font-size: 13px; }
-
-.pw-row { display: flex; gap: 8px; }
-.pw-row .text-input { flex: 1; width: auto; min-width: 0; }
-.pw-btn { width: auto; min-height: 48px; padding: 0 18px; font-size: 16px; }

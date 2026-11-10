@@ -1,0 +1,32 @@
+# 임시: 파놉틱 도구 실제 페이지 E2E
+name: panoptic-e2e
+on:
+  push:
+    branches: [ccr-34ba176c-p38il1]
+    paths: [.github/workflows/panoptic-e2e.yml, .github/panoptic-test/*.mjs, tools/panoptic/*]
+permissions:
+  contents: write
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          curl -sSL -o cats.jpg http://images.cocodataset.org/val2017/000000039769.jpg
+          curl -sSL -o room.jpg http://images.cocodataset.org/val2017/000000000139.jpg
+          curl -sSL -o street.jpg http://images.cocodataset.org/val2017/000000000785.jpg
+          curl -sSL -o kitchen.jpg http://images.cocodataset.org/val2017/000000000632.jpg
+      - run: |
+          npm i --no-audit --no-fund -s playwright@1.56.1
+          npx playwright install --with-deps chromium 2>&1 | tail -1
+          python3 -m http.server 8000 >/dev/null 2>&1 &
+          sleep 2
+          timeout 1800 node .github/panoptic-test/e2e.mjs cats.jpg room.jpg street.jpg kitchen.jpg 2>&1 | tee .github/panoptic-test/out/e2e.txt || true
+      - if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add -A .github/panoptic-test/out
+          git commit -m "Panoptic E2E results" || exit 0
+          git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME"

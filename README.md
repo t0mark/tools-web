@@ -1,7 +1,7 @@
 # Tools Web
 
 모바일 우선 웹 도구 모음. 빌드 과정 없는 정적 사이트라서 GitHub Pages 등에 그대로 올리면 됩니다.
-SAM 3 도구를 제외한 모든 처리는 브라우저 안에서 이루어지고, 파일이 서버로 전송되지 않습니다.
+모든 처리는 브라우저 안에서 이루어지고, 파일이 서버로 전송되지 않습니다.
 
 ## 구조
 
@@ -49,17 +49,15 @@ AAC가 아닌 오디오나 fragmented MP4 등은 파일 전체를 한 번에 디
 - 회전/확대/이동, 와이어프레임, 격자, 자동 회전, 어두운 배경, Z-up → Y-up 변환, 애니메이션 재생
 - 정점·삼각형·재질 수와 크기 표시
 
-### SAM 3 세그멘테이션 (`tools/sam3-panoptic/`)
+### 파놉틱 세그멘테이션 (`tools/panoptic/`)
 
-[SAM 3](https://ai.meta.com/sam3/)(Meta)로 장면 전체를 물체/배경 영역으로 나눕니다(파놉틱). **이 도구만 이미지를 외부 서버(Roboflow Serverless API)로 전송**합니다.
+사진의 모든 픽셀을 COCO 파놉틱 133종(물체 80종은 개체별, 배경 53종은 종류별)으로 나눕니다. 기기 안에서 실행됩니다.
 
-- SAM 3는 텍스트 개념별 마스크를 주는 모델이라, 물체(things)·배경(stuff) 단어 목록을 보내고(요청당 16개씩) 결과를 브라우저에서 하나의 라벨 맵으로 합칩니다. 물체가 배경보다 우선, 같은 종류는 신뢰도 높은 쪽, 물체는 인스턴스별(자동차 1, 2…), 배경은 클래스별 한 영역.
-- 신뢰도 기준·색 진하기·경계선·라벨 조절, 영역을 눌러 강조, PNG 저장, 찾을 대상 목록 수정(영어 단어)
-- **API 키**: Roboflow 프라이빗 키를 비밀번호로 암호화해 `app.js`의 `ENCRYPTED_KEY`에 넣어 두고, 페이지에서 비밀번호를 입력하면 브라우저에서 복호화해 사용합니다(PBKDF2-SHA256 600,000회 → AES-256-GCM).
-  - ⚠ 리포가 공개라 암호문도 공개입니다. 짧은 비밀번호는 대입 공격으로 풀릴 수 있으니, 키 유출 시에는 Roboflow에서 키를 재발급하세요.
-  - 키·비밀번호 변경: `KEY='새 키' PASSWORD='새 비밀번호' node scripts/encrypt-key.mjs` 결과로 `ENCRYPTED_KEY`를 바꾸고 `index.html`의 `?v=` 값을 올립니다.
-  - 퍼블리셔블 키(`rf_…`)는 서버리스 API에서 `401 not authorized for serverless inference`로 거절됩니다.
-- 참고: 기기 안에서 직접 실행하는 버전(ONNX Runtime Web + INT8 SAM 3)도 만들어 검증했지만 PC CPU 기준 한 장에 약 1분 30초가 걸려 제외했습니다(커밋 9f9a790 참고).
+- 모델: [onnx-community/maskformer-swin-tiny-coco](https://huggingface.co/onnx-community/maskformer-swin-tiny-coco) INT8(약 48MB), [transformers.js](https://huggingface.co/docs/transformers.js) 4.3.2(jsDelivr CDN)로 Web Worker에서 실행. 모델은 처음 한 번 받아 브라우저 캐시에 저장
+- 분석 해상도: 긴 변 768px
+- 라벨(한국어)·경계선·색 진하기 조절, 영역을 눌러 강조, PNG 저장
+- 모델 선정(CI에서 COCO 사진 3장으로 비교, CPU 1스레드 네이티브): MaskFormer Swin-Tiny INT8 약 5초/장으로 픽셀의 99~100% 분류. DETR-R50 INT8은 양자화로 결과가 망가졌고, Swin-Small/Base는 비슷한 품질에 더 크고 느림
+- 참고: 처음에는 SAM 3로 만들었지만 SAM 3는 텍스트로 지정한 대상만 찾는 모델이라 진짜 파놉틱이 아니었고, Roboflow 서버는 다른 사이트에서의 브라우저 호출(CORS)을 허용하지 않아 교체했습니다
 
 ## 로컬 실행
 
