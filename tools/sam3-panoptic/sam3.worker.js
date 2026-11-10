@@ -22,7 +22,7 @@ const INPUT = 448;
 const NMS_IOU = 0.7;
 
 ort.env.wasm.wasmPaths = new URL('../../vendor/onnxruntime-web/', import.meta.url).href;
-ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1)) : 1;
+ort.env.wasm.numThreads = 1; // 멀티스레드는 세션 생성이 멈추는 문제가 있어 기본 1 (?threads=N 으로 시험 가능)
 ort.env.wasm.proxy = false;
 
 const post = (msg, transfer) => self.postMessage(msg, transfer || []);
@@ -51,7 +51,7 @@ async function cachedBytes(key) {
   if (cache && body && body.tee) {
     const [a, b] = body.tee();
     body = a;
-    putPromise = cache.put(f.url, new Response(b, { headers: { 'content-type': 'application/octet-stream', 'content-length': String(total) } }))
+    putPromise = cache.put(f.url, new Response(b, { headers: { 'content-type': 'application/octet-stream' } }))
       .catch((e) => post({ type: 'log', text: `캐시 저장 실패(용량 부족 등): ${e.message}` }));
   }
   const buf = new Uint8Array(total);
@@ -76,20 +76,33 @@ async function createSession(key) {
   const bytes = await cachedBytes(key);
   post({ type: 'stage', text: `${FILES[key].label} 준비 중…` });
   const tc = performance.now();
-  try { return await createSessionInner(bytes); } finally { post({ type: 'log', text: `${key} session ${((performance.now() - tc) / 1000).toFixed(1)}s` }); }
+  try { return await createSessionInner(bytes, key); } finally { post({ type: 'log', text: `${key} session ${((performance.now() - tc) / 1000).toFixed(1)}s` }); }
 }
 
-async function createSessionInner(bytes) {
-  const opts = { graphOptimizationLevel: 'all' };
+// onnxruntime-web 1.31에서 이 INT8 모델(이미지·텍스트 인코더)은 그래프 최적화를 켜면
+// ShapeInferenceError로 로딩이 실패한다 → 인코더는 최적화 끔. 그 외에도 실패하면 최적화 끄고 재시도.
+const OPT_LEVEL = { encoder: 'disabled', language: 'disabled', decoder: 'all' };
+
+async function createSessionInner(bytes, key) {
+  const attempt = async (eps, level) => ort.InferenceSession.create(bytes, { executionProviders: eps, graphOptimizationLevel: level });
+  const withFallback = async (eps) => {
+    try {
+      return await attempt(eps, OPT_LEVEL[key] || 'all');
+    } catch (e) {
+      if ((OPT_LEVEL[key] || 'all') === 'disabled') throw e;
+      post({ type: 'log', text: `${key}: 최적화 끄고 재시도 (${String(e.message).slice(0, 120)})` });
+      return attempt(eps, 'disabled');
+    }
+  };
   if (ep === 'webgpu') {
     try {
-      return await ort.InferenceSession.create(bytes, { ...opts, executionProviders: ['webgpu', 'wasm'] });
+      return await withFallback(['webgpu', 'wasm']);
     } catch (e) {
       post({ type: 'log', text: `WebGPU 실패 → CPU로 전환: ${e.message}` });
       ep = 'wasm';
     }
   }
-  return ort.InferenceSession.create(bytes, { ...opts, executionProviders: ['wasm'] });
+  return withFallback(['wasm']);
 }
 
 async function loadTextTable() {

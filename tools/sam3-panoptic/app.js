@@ -235,7 +235,7 @@
 
   function getWorker() {
     if (worker) return workerReady;
-    worker = new Worker('sam3.worker.js?v=20261109e', { type: 'module' });
+    worker = new Worker('sam3.worker.js?v=20261110a', { type: 'module' });
     let lastLog = 0;
     worker.onmessage = (e) => {
       if (DEBUG && (e.data.type !== 'progress' || Date.now() - lastLog > 3000)) {

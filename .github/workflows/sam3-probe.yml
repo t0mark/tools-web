@@ -1,9 +1,9 @@
-# 임시: SAM 3 기기 실행 검증 — onnxruntime-web 버전별 모델 호환성 확인
+# 임시: SAM 3 기기 실행 검증 — 실제 페이지 E2E (헤드리스 Chromium, CPU/WASM)
 name: sam3-probe
 on:
   push:
     branches: [ccr-34ba176c-p38il1]
-    paths: [.github/workflows/sam3-probe.yml, .github/sam3-test/*.mjs]
+    paths: [.github/workflows/sam3-probe.yml, .github/sam3-test/*.mjs, tools/sam3-panoptic/*.js]
 permissions:
   contents: write
 jobs:
@@ -15,28 +15,24 @@ jobs:
         shell: bash -o pipefail -e {0}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
-      - run: pip install -q huggingface_hub
-      - name: Download models
+      - name: Test images (COCO val2017)
         run: |
-          python - <<'PY'
-          from huggingface_hub import hf_hub_download
-          for f in ['compact-448/sam3_image_encoder_fp16.onnx', 'compact-448/sam3_decoder.onnx']:
-              p = hf_hub_download('rusen/sam3-browser-int8', f, revision='970196bb75edfbcdab59567ee017673a4c53adc7', local_dir='models')
-              print(p)
-          PY
-      - name: onnxruntime-web versions
+          curl -sSL -o cats.jpg http://images.cocodataset.org/val2017/000000039769.jpg
+          curl -sSL -o room.jpg http://images.cocodataset.org/val2017/000000000139.jpg
+      - name: Browser E2E
         run: |
-          for v in 1.31.1 1.27.0 1.24.3 1.22.0 1.20.1; do
-            mkdir -p ort-$v && (cd ort-$v && npm init -y >/dev/null && npm i --no-audit --no-fund -s onnxruntime-web@$v >/dev/null)
-            timeout 600 node .github/sam3-test/ort-probe.mjs ort-$v models/compact-448/sam3_image_encoder_fp16.onnx models/compact-448/sam3_decoder.onnx 2>&1 | tee -a .github/sam3-test/out/ort-probe.txt || echo "TIMEOUT/CRASH $v" | tee -a .github/sam3-test/out/ort-probe.txt
-          done
+          npm i --no-audit --no-fund -s playwright@1.56.1
+          npx playwright install --with-deps chromium 2>&1 | tail -1
+          python3 -m http.server 8000 >/dev/null 2>&1 &
+          sleep 2
+          rm -f .github/sam3-test/out/e2e-*
+          timeout 1500 node .github/sam3-test/e2e.mjs 1 cats.jpg room.jpg 2>&1 | grep -v '"progress"' | tee .github/sam3-test/out/e2e-t1.txt || true
+          timeout 600 node .github/sam3-test/e2e.mjs 4 cats.jpg 2>&1 | grep -v '"progress"' | tee .github/sam3-test/out/e2e-t4.txt || true
       - name: Commit results
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add .github/sam3-test/out
-          git commit -m "SAM 3: ort-web probe results" || exit 0
+          git add -A .github/sam3-test/out
+          git commit -m "SAM 3: E2E results" || exit 0
           git pull --rebase -q origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME"

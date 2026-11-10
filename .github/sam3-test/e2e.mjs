@@ -45,7 +45,7 @@ try {
     for (;;) {
       const st = await withTimeout(page.evaluate(() => ({ done: document.getElementById('loading').classList.contains('hidden') })), 60000, 'page.evaluate (main thread blocked?)');
       if (st.done) break;
-      if (Date.now() - t > 15 * 60 * 1000) throw new Error('TIMEOUT 15min');
+      if (Date.now() - t > 9 * 60 * 1000) throw new Error('TIMEOUT 9min');
       await page.waitForTimeout(5000);
     }
     const err = await page.evaluate(() => !document.getElementById('error-box').classList.contains('hidden') && document.getElementById('error-text').textContent);
