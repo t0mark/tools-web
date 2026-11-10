@@ -3,9 +3,8 @@
  *
  * SAM 3는 "텍스트 개념 → 해당하는 모든 객체 마스크"를 내주는 모델이라 그 자체로 파놉틱 출력은 없다.
  * 그래서
- *  1) 물체(things: 사람, 차…)와 배경(stuff: 하늘, 도로…) 개념 목록으로 마스크를 구하고
- *     - 기기에서 실행: ONNX Runtime Web + INT8 SAM 3 (sam3.worker.js)
- *     - 서버에서 실행: Roboflow SAM 3 API (프라이빗 키 필요)
+ *  1) 물체(things: 사람, 차…)와 배경(stuff: 하늘, 도로…) 개념 목록을 Roboflow SAM 3 API로 보내 마스크를 구하고
+ *     - API 키는 비밀번호로 암호화해 두고(ENCRYPTED_KEY), 사용자가 비밀번호를 넣으면 브라우저에서 복호화
  *  2) 돌아온 마스크들을 브라우저에서 하나의 라벨 맵으로 합친다.
  *     - 픽셀마다 한 영역만: 물체 > 배경, 같은 종류끼리는 신뢰도 높은 쪽
  *     - 물체는 인스턴스별로, 배경은 같은 클래스끼리 하나의 영역으로
@@ -17,20 +16,10 @@
   const MAX_PROMPTS = 16; // 요청당 최대 프롬프트 수
   const MAX_SIDE = 1280; // 업로드 전 최대 변 길이
   const REQUEST_THRESH = 0.3; // 서버 기준은 낮게 받고, 화면에서 슬라이더로 거름
-  const KEY_STORAGE = 'toolsweb.roboflowKey';
-  const MODE_STORAGE = 'toolsweb.sam3Mode';
-  const EP_STORAGE = 'toolsweb.sam3Ep';
-  const LOCAL_INPUT = 448; // 기기 모델 입력 크기
-  const LOCAL_MASK_SIDE = 512; // 기기 모델 마스크 해상도(긴 변)
-  const LOCAL_MODEL_URLS = [
-    'https://huggingface.co/rusen/sam3-browser-int8/resolve/970196bb75edfbcdab59567ee017673a4c53adc7/compact-448/sam3_image_encoder_fp16.onnx',
-    'https://huggingface.co/rusen/sam3-browser-int8/resolve/970196bb75edfbcdab59567ee017673a4c53adc7/compact-448/sam3_decoder.onnx',
-  ];
-  const MODEL_CACHE = 'sam3-models-v1';
-  const QS = new URLSearchParams(location.search);
-  const DEBUG = QS.has('debug'); // ?debug : 워커 메시지를 콘솔에 기록
-  const FORCE_THREADS = Number(QS.get('threads')) || 0; // ?threads=1 : 스레드 수 강제
-  // 참고: 퍼블리셔블 키(rf_...)는 서버리스 API에서 401 "not authorized for serverless inference"로 거절됨 → 프라이빗 키 필요
+  const PW_STORAGE = 'toolsweb.sam3Password';
+  // Roboflow 프라이빗 API 키를 비밀번호로 암호화한 값 (scripts/encrypt-key.mjs 로 생성)
+  // PBKDF2-SHA256(600,000회) → AES-256-GCM. 비밀번호가 짧으면 공개 리포에서 대입 공격으로 풀릴 수 있음.
+  const ENCRYPTED_KEY = {"v":1,"iter":600000,"salt":"Pwr5b/m8yVpDz+TGaeas4g==","iv":"+TvajidY05oV04SH","ct":"lNZ7Y1ILykTZIfodeQ9T/jtGW0f2v6QNdOmwUVqVvxkd8uRN"};
 
   const DEFAULT_THINGS = 'person, car, bicycle, motorcycle, bus, truck, dog, cat, bird, chair, table, sofa, bed, bottle, cup, laptop, cell phone, book, potted plant, tv, bag, umbrella';
   const DEFAULT_STUFF = 'sky, tree, grass, road, sidewalk, building, wall, floor, ceiling, water, mountain, sand, snow, window, door';
@@ -47,21 +36,20 @@
   const $ = (id) => document.getElementById(id);
   const els = {
     input: $('file-input'), dropzone: $('dropzone'), pick: $('pick-step'), work: $('work-step'),
-    keyCard: $('key-card'), keyState: $('key-state'), apiKey: $('api-key'), rememberKey: $('remember-key'),
+    keyCard: $('key-card'), keyState: $('key-state'), password: $('password'), rememberPw: $('remember-pw'), unlock: $('unlock-btn'),
     cv: $('cv'), loading: $('loading'), loadingText: $('loading-text'),
     rAlpha: $('r-alpha'), rAlphaOut: $('r-alpha-out'), rThresh: $('r-thresh'), rThreshOut: $('r-thresh-out'),
     legend: $('legend'), legendEmpty: $('legend-empty'), segCount: $('seg-count'),
     things: $('things'), stuff: $('stuff'), resetPrompts: $('reset-prompts'),
     run: $('run-btn'), save: $('save-btn'), errorBox: $('error-box'), errorText: $('error-text'),
-    modeLocal: $('mode-local'), modeApi: $('mode-api'), localBox: $('local-box'), apiBox: $('api-box'),
-    modelState: $('model-state'), epSelect: $('ep-select'), clearModel: $('clear-model'), timing: $('timing'),
-    progress: $('progress'), progressBar: $('progress-bar'),
+    timing: $('timing'),
   };
 
   const state = {
     image: null, // 업로드용으로 줄인 캔버스
     name: 'image',
-    raw: [], // { prompt, kind:'thing'|'stuff', confidence, polygons | (mask,w,h) }
+    raw: [], // { prompt, kind:'thing'|'stuff', confidence, polygons }
+    apiKey: null, // 복호화된 키 (메모리에만)
     segments: [], // 합쳐진 최종 영역
     labels: null, // Int32Array(w*h), -1 = 없음
     selected: -1,
@@ -76,65 +64,64 @@
     del(k) { try { localStorage.removeItem(k); } catch (e) { /* 무시 */ } },
   };
 
-  const userKey = () => els.apiKey.value.trim();
-  const isPublishable = (k) => /^rf_/i.test(k);
+  // ---------- 비밀번호 → API 키 ----------
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+  async function decryptKey(password) {
+    const enc = new TextEncoder();
+    const base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    const aes = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: b64(ENCRYPTED_KEY.salt), iterations: ENCRYPTED_KEY.iter },
+      base, { name: 'AES-GCM', length: 256 }, false, ['decrypt'],
+    );
+    try {
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(ENCRYPTED_KEY.iv) }, aes, b64(ENCRYPTED_KEY.ct));
+      return new TextDecoder().decode(pt);
+    } catch (e) {
+      return null; // 비밀번호가 틀리면 GCM 인증 실패
+    }
+  }
 
   function syncKeyState() {
-    const k = userKey();
-    const ok = k.length > 0 && !isPublishable(k);
-    els.keyState.textContent = !k ? '미설정' : ok ? '설정됨' : '퍼블리셔블 키';
-    els.keyState.className = `key-state ${ok ? 'ok' : 'missing'}`;
+    const ready = state.apiKey || els.password.value;
+    els.keyState.textContent = state.apiKey ? '열림' : els.password.value ? '입력됨' : '잠김';
+    els.keyState.className = `key-state ${ready ? 'ok' : 'missing'}`;
   }
 
-  els.apiKey.value = store.get(KEY_STORAGE) || '';
-  syncKeyState();
-
-  // ---------- 실행 방식 ----------
-  const mode = () => (els.modeApi.checked ? 'api' : 'local');
-  function syncMode() {
-    els.localBox.classList.toggle('hidden', mode() !== 'local');
-    els.apiBox.classList.toggle('hidden', mode() !== 'api');
-    els.keyState.textContent = mode() === 'local' ? '기기에서 (실험)' : els.keyState.textContent;
-    if (mode() === 'api') syncKeyState();
-    else els.keyState.className = 'key-state ok';
-    store.set(MODE_STORAGE, mode());
-  }
-  (store.get(MODE_STORAGE) === 'api' ? els.modeApi : els.modeLocal).checked = true;
-  els.epSelect.value = store.get(EP_STORAGE) || ('gpu' in navigator ? 'webgpu' : 'wasm');
-  [els.modeLocal, els.modeApi].forEach((r) => r.addEventListener('change', syncMode));
-  els.epSelect.addEventListener('change', () => { store.set(EP_STORAGE, els.epSelect.value); resetWorker(); });
-  syncMode();
-
-  async function modelCached() {
-    try {
-      const c = await caches.open(MODEL_CACHE);
-      const hits = await Promise.all(LOCAL_MODEL_URLS.map((u) => c.match(u)));
-      return hits.every(Boolean);
-    } catch (e) { return false; }
-  }
-  async function syncModelState() {
-    const cached = await modelCached();
-    els.modelState.textContent = cached ? '모델이 이 기기에 저장되어 있어요.' : '처음 실행할 때 모델 약 500MB를 내려받아요 (Wi-Fi 권장). 한 번 받으면 기기에 저장됩니다.';
-    els.clearModel.classList.toggle('hidden', !cached);
-    return cached;
-  }
-  syncModelState();
-  els.clearModel.addEventListener('click', async () => {
-    if (!confirm('저장된 SAM 3 모델(약 500MB+)을 이 기기에서 삭제할까요?')) return;
-    try { await caches.delete(MODEL_CACHE); } catch (e) { /* 무시 */ }
-    resetWorker();
-    syncModelState();
-  });
-
-  // 모델(약 500MB)이 브라우저 정리 대상이 되지 않도록 영구 저장 요청
-  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-  els.apiKey.addEventListener('input', () => {
+  async function getApiKey() {
+    if (state.apiKey) return state.apiKey;
+    const pw = els.password.value;
+    if (!pw) {
+      els.keyCard.open = true;
+      els.password.focus();
+      throw new Error('비밀번호를 입력해주세요.');
+    }
+    setProgress('비밀번호 확인 중…');
+    const key = await decryptKey(pw);
+    if (!key) {
+      els.keyCard.open = true;
+      els.password.select();
+      store.del(PW_STORAGE);
+      throw new Error('비밀번호가 틀렸어요.');
+    }
+    state.apiKey = key;
+    if (els.rememberPw.checked) store.set(PW_STORAGE, pw); else store.del(PW_STORAGE);
+    els.keyCard.open = false;
     syncKeyState();
-    if (els.rememberKey.checked) store.set(KEY_STORAGE, els.apiKey.value.trim());
-  });
-  els.rememberKey.addEventListener('change', () => {
-    if (els.rememberKey.checked) store.set(KEY_STORAGE, els.apiKey.value.trim());
-    else store.del(KEY_STORAGE);
+    return key;
+  }
+
+  els.password.value = store.get(PW_STORAGE) || '';
+  els.rememberPw.checked = !!els.password.value || els.rememberPw.checked;
+  els.keyCard.open = !els.password.value;
+  syncKeyState();
+  els.password.addEventListener('input', () => { state.apiKey = null; syncKeyState(); });
+  els.password.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); els.unlock.click(); } });
+  els.rememberPw.addEventListener('change', () => { if (!els.rememberPw.checked) store.del(PW_STORAGE); });
+  els.unlock.addEventListener('click', async () => {
+    hideError();
+    if (state.image) { analyze(); return; }
+    try { els.unlock.disabled = true; await getApiKey(); } catch (e) { showError(e.message); } finally { els.unlock.disabled = false; els.loading.classList.add('hidden'); }
   });
 
   els.things.value = DEFAULT_THINGS;
@@ -191,9 +178,7 @@
       throw new Error('서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요.');
     }
     if (res.status === 401 || res.status === 403) {
-      throw new Error(isPublishable(apiKey)
-        ? '퍼블리셔블 키(rf_…)는 SAM 3 서버에서 사용할 수 없어요. 프라이빗 API 키를 입력해주세요.'
-        : 'API 키가 올바르지 않습니다. Roboflow 프라이빗 API 키를 확인해주세요.');
+      throw new Error('저장된 Roboflow API 키가 거절됐어요. 키가 만료되었거나 바뀌었을 수 있어요.');
     }
     if (!res.ok) {
       let detail = '';
@@ -207,102 +192,14 @@
     }));
   }
 
-  // ---------- 기기에서 실행 ----------
-  let worker = null;
-  let workerReady = null;
-  let workerHandler = null;
-
-  function resetWorker() {
-    if (worker) worker.terminate();
-    worker = null;
-    workerReady = null;
-  }
-
-  function setProgress(text, ratio) {
+  function setProgress(text) {
     els.loadingText.textContent = text;
-    els.progress.classList.toggle('hidden', ratio == null);
-    if (ratio != null) els.progressBar.style.width = `${Math.round(Math.min(1, ratio) * 100)}%`;
-  }
-
-  function getWorker() {
-    if (worker) return workerReady;
-    worker = new Worker('sam3.worker.js?v=20261110b', { type: 'module' });
-    let lastLog = 0;
-    worker.onmessage = (e) => {
-      if (DEBUG && (e.data.type !== 'progress' || Date.now() - lastLog > 3000)) {
-        lastLog = Date.now();
-        console.info('[sam3-debug]', JSON.stringify(e.data, (k, v) => (v && v.byteLength > 64 ? `<${v.byteLength}B>` : v)).slice(0, 300));
-      }
-      if (workerHandler) workerHandler(e.data);
-    };
-    worker.onerror = (e) => workerHandler && workerHandler({ type: 'error', message: e.message || '워커 오류' });
-    workerReady = new Promise((resolve, reject) => {
-      const mb = (b) => (b / 1048576).toFixed(0);
-      workerHandler = (m) => {
-        if (m.type === 'progress') setProgress(m.cached ? `${m.label} 불러오는 중…` : `${m.label} 내려받는 중 ${mb(m.loaded)} / ${mb(m.total)}MB`, m.loaded / m.total);
-        else if (m.type === 'stage') setProgress(m.text, null);
-        else if (m.type === 'log') console.info('[sam3]', m.text);
-        else if (m.type === 'cachefail') state.cacheFailed = true;
-        else if (m.type === 'ready') { syncModelState(); resolve(m); }
-        else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
-      };
-      worker.postMessage({ type: 'init', ep: els.epSelect.value, threads: FORCE_THREADS });
-    });
-    return workerReady;
-  }
-
-  function localPixels() {
-    const c = document.createElement('canvas');
-    c.width = LOCAL_INPUT;
-    c.height = LOCAL_INPUT;
-    const ctx = c.getContext('2d', { willReadFrequently: true });
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(state.image, 0, 0, LOCAL_INPUT, LOCAL_INPUT); // 참조 구현과 같이 비율 무시하고 맞춤
-    const d = ctx.getImageData(0, 0, LOCAL_INPUT, LOCAL_INPUT).data;
-    const n = LOCAL_INPUT * LOCAL_INPUT;
-    const out = new Uint8Array(3 * n);
-    for (let i = 0; i < n; i++) { out[i] = d[i * 4]; out[n + i] = d[i * 4 + 1]; out[2 * n + i] = d[i * 4 + 2]; }
-    return out;
-  }
-
-  async function runLocal(prompts) {
-    if (!workerReady && !(await modelCached()) && !confirm('SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?')) {
-      throw new Error('모델 다운로드를 취소했어요.');
-    }
-    setProgress('모델 준비 중…', null);
-    const info = await getWorker();
-    const s = Math.min(1, LOCAL_MASK_SIDE / Math.max(state.image.width, state.image.height));
-    const outW = Math.max(1, Math.round(state.image.width * s));
-    const outH = Math.max(1, Math.round(state.image.height * s));
-    const pixels = localPixels();
-    return new Promise((resolve, reject) => {
-      workerHandler = (m) => {
-        if (m.type === 'stage') setProgress(m.text, null);
-        else if (m.type === 'progress') setProgress(`${m.label} 내려받는 중 ${(m.loaded / 1048576).toFixed(0)} / ${(m.total / 1048576).toFixed(0)}MB`, m.loaded / m.total);
-        else if (m.type === 'decode') setProgress(`영역 찾는 중 ${m.done + 1}/${m.total} · ${labelOf(m.prompt)}`, (m.done + 1) / m.total);
-        else if (m.type === 'log') console.info('[sam3]', m.text);
-        else if (m.type === 'result') resolve({ ...m, info });
-        else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
-      };
-      worker.postMessage({ type: 'run', pixels, outW, outH, prompts, thresh: REQUEST_THRESH }, [pixels.buffer]);
-    });
+    if (state.image) els.loading.classList.remove('hidden');
   }
 
   async function analyze() {
     if (!state.image || state.busy) return;
     hideError();
-    if (mode() === 'local') return analyzeLocal();
-    const key = userKey();
-    if (!key || isPublishable(key)) {
-      els.keyCard.open = true;
-      els.modeApi.checked = true;
-      syncMode();
-      els.apiKey.focus();
-      showError(key
-        ? '퍼블리셔블 키(rf_…)는 SAM 3 서버에서 사용할 수 없어요. 프라이빗 API 키를 입력해주세요.'
-        : '먼저 Roboflow 프라이빗 API 키를 입력해주세요.');
-      return;
-    }
     const things = parseList(els.things.value);
     const stuff = parseList(els.stuff.value).filter((t) => !things.includes(t));
     const all = [...things, ...stuff];
@@ -311,8 +208,11 @@
     state.busy = true;
     els.run.disabled = true;
     els.loading.classList.remove('hidden');
-    setProgress(`분석 중… (${all.length}개 대상)`, null);
+    els.timing.textContent = '';
     try {
+      const key = await getApiKey();
+      setProgress(`분석 중… (${all.length}개 대상)`);
+      const t0 = performance.now();
       const base64 = state.image.toDataURL('image/jpeg', 0.9).split(',')[1];
       const batches = [];
       for (let i = 0; i < all.length; i += MAX_PROMPTS) batches.push(all.slice(i, i + MAX_PROMPTS));
@@ -327,6 +227,7 @@
           if (polys.length) state.raw.push({ prompt: r.prompt.toLowerCase(), kind, confidence: p.confidence, polygons: polys });
         }
       }
+      els.timing.textContent = `Roboflow SAM 3 · 대상 ${all.length}개 · ${((performance.now() - t0) / 1000).toFixed(1)}초`;
       compose();
     } catch (err) {
       console.error(err);
@@ -335,40 +236,6 @@
       state.busy = false;
       els.run.disabled = false;
       els.loading.classList.add('hidden');
-    }
-  }
-
-  async function analyzeLocal() {
-    const things = parseList(els.things.value);
-    const stuff = parseList(els.stuff.value).filter((t) => !things.includes(t));
-    const all = [...things, ...stuff];
-    if (!all.length) { showError('찾을 대상을 하나 이상 입력해주세요.'); return; }
-    state.busy = true;
-    els.run.disabled = true;
-    els.loading.classList.remove('hidden');
-    els.timing.textContent = '';
-    try {
-      const res = await runLocal(all);
-      const thingSet = new Set(things);
-      state.raw = res.items.map((it) => ({
-        prompt: it.prompt, kind: thingSet.has(it.prompt) ? 'thing' : 'stuff', confidence: it.confidence, mask: it.mask, w: it.w, h: it.h,
-      }));
-      const t = res.timings;
-      const engine = res.ep === 'webgpu' ? 'GPU(WebGPU)' : `CPU ${res.info.threads}스레드`;
-      els.timing.textContent = `기기에서 처리 · ${engine} · 이미지 분석 ${(t.encode / 1000).toFixed(1)}초 · 대상 ${all.length}개 ${(t.decode / 1000).toFixed(1)}초`
-        + (state.cacheFailed ? ' · ⚠ 저장 공간이 부족해 모델을 기기에 저장하지 못했어요. 페이지를 다시 열면 다시 내려받아요.' : '');
-      compose();
-    } catch (err) {
-      console.error(err);
-      let msg = (err && err.message) || String(err);
-      if (/memory|allocation|RangeError|out of memory/i.test(msg)) msg = `기기 메모리가 부족해 모델을 실행하지 못했어요. 다른 앱을 닫고 다시 시도하거나 '서버에서 실행'을 이용해주세요. (${msg})`;
-      else if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) msg = '모델을 내려받지 못했어요. 인터넷 연결을 확인해주세요.';
-      showError(msg);
-    } finally {
-      state.busy = false;
-      els.run.disabled = false;
-      els.loading.classList.add('hidden');
-      els.progress.classList.add('hidden');
     }
   }
 
