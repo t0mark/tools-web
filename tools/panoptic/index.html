@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
-  <title>파놉틱 세그멘테이션 · Tools Web</title>
+  <title>Panoptic Segmentation · Tools Web</title>
   <link rel="icon" href="../../favicon.ico" sizes="32x32" />
   <link rel="icon" href="../../assets/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="../../assets/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="Tools Web" />
   <link rel="manifest" href="../../manifest.webmanifest" />
+  <script src="../../assets/js/tap-guard.js?v=20261110e"></script>
   <link rel="stylesheet" href="../../assets/css/base.css?v=20261110d" />
   <link rel="stylesheet" href="style.css?v=20261110d" />
 </head>
@@ -20,7 +21,7 @@
       <a class="back-btn" href="../../" aria-label="도구 목록으로">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </a>
-      <h1>파놉틱 세그멘테이션</h1>
+      <h1>Panoptic Segmentation</h1>
     </div>
   </header>
 
@@ -28,12 +29,16 @@
     <input id="file-input" type="file" accept="image/*" class="sr-only" />
 
     <section id="pick-step">
+      <div class="page-intro">
+        <h2>사진 속 모든 영역 나누기</h2>
+        <p>사진의 모든 픽셀을 사람·자동차 같은 물체(개체별)와 하늘·벽·바닥 같은 배경(종류별)으로 나눠 색으로 보여줘요. 133가지 종류를 구분해요.</p>
+      </div>
       <label class="dropzone" for="file-input" id="dropzone">
         <div class="dropzone-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/><path d="m2 18 10 5 10-5" opacity=".5"/></svg>
         </div>
         <strong>이미지 선택</strong>
-        <span>사진의 모든 픽셀을 물체·배경 종류별로 나눠요</span>
+        <span>JPG · PNG · WebP 등</span>
       </label>
       <p class="hint">기기 안에서 처리되며 사진이 밖으로 전송되지 않아요.<br />처음 한 번 모델(약 48MB)을 내려받아요.</p>
     </section>
@@ -78,7 +83,7 @@
       <p id="error-text"></p>
     </div>
 
-    <p class="footnote">모델: <a href="https://huggingface.co/onnx-community/maskformer-swin-tiny-coco" target="_blank" rel="noopener">MaskFormer Swin-Tiny</a> (COCO 파놉틱 133종) ·
+    <p class="footnote">모델: <a href="https://huggingface.co/onnx-community/maskformer-swin-tiny-coco" target="_blank" rel="noopener">MaskFormer Swin-Tiny</a> (COCO Panoptic 133종) ·
       실행: <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">transformers.js</a></p>
   </main>
 
