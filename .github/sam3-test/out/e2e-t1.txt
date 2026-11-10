@@ -1,42 +1,249 @@
 crossOriginIsolated: true
 TOKENIZER 43 / 43 match []
   [5s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
-  [5s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261109e
+  [5s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261110a
   [5s console.info] [sam3-debug] {"type":"log","text":"init ep=wasm threads=1 isolated=true"}
   [5s console.info] [sam3] init ep=wasm threads=1 isolated=true
-  [6s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
-  [8s console.info] [sam3-debug] {"type":"log","text":"decoder session 2.1s"}
-  [8s console.info] [sam3] decoder session 2.1s
-  [11s console.info] [sam3-debug] {"type":"progress","key":"encoder","label":"이미지 모델","loaded":223729615,"total":461907426}
-  [14s console.info] [sam3-debug] {"type":"log","text":"캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error."}
-  [14s console.info] [sam3] 캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error.
-  [14s console.info] [sam3-debug] {"type":"stage","text":"이미지 모델 준비 중…"}
-  [15s console.info] [sam3-debug] {"type":"log","text":"encoder session 0.8s"}
-  [15s console.info] [sam3] encoder session 0.8s
-  [15s console.info] [sam3-debug] {"type":"error","message":"Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0"}
-  [15s console.error] Error: Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
-    at workerHandler (http://localhost:8000/tools/sam3-panoptic/app.js?v=20261109e:255:62)
-  
-E2E threads=1 cats.jpg: 11.016s ERROR Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
-  timing: 
-  legend: 
-  [16s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
-  [16s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261109e
-  [16s console.info] [sam3-debug] {"type":"log","text":"init ep=wasm threads=1 isolated=true"}
-  [16s console.info] [sam3] init ep=wasm threads=1 isolated=true
-  [16s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
-  [18s console.info] [sam3-debug] {"type":"log","text":"decoder session 2.3s"}
-  [18s console.info] [sam3] decoder session 2.3s
-  [21s console.info] [sam3-debug] {"type":"progress","key":"encoder","label":"이미지 모델","loaded":223704403,"total":461907426}
-  [24s console.info] [sam3-debug] {"type":"log","text":"캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error."}
-  [24s console.info] [sam3] 캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error.
-  [24s console.info] [sam3-debug] {"type":"stage","text":"이미지 모델 준비 중…"}
-  [25s console.info] [sam3-debug] {"type":"log","text":"encoder session 0.8s"}
-  [25s console.info] [sam3] encoder session 0.8s
-  [25s console.info] [sam3-debug] {"type":"error","message":"Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0"}
-  [25s console.error] Error: Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
-    at workerHandler (http://localhost:8000/tools/sam3-panoptic/app.js?v=20261109e:255:62)
-  
-E2E threads=1 room.jpg: 11.013s ERROR Can't create a session. ERROR_CODE: 6, ERROR_MESSAGE: [ShapeInferenceError] Can't merge shape info. Both inferred and declared dimension have values but they differ. Inferred=4 Declared=5 Dimension=0
-  timing: 
-  legend: 
+  [5s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
+  [8s console.info] [sam3-debug] {"type":"log","text":"decoder session 2.0s"}
+  [8s console.info] [sam3] decoder session 2.0s
+  [13s console.info] [sam3-debug] {"type":"log","text":"캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error."}
+  [13s console.info] [sam3] 캐시 저장 실패(용량 부족 등): Failed to execute 'put' on 'Cache': Unexpected internal error.
+  [13s console.info] [sam3-debug] {"type":"stage","text":"이미지 모델 준비 중…"}
+  [24s console.info] [sam3-debug] {"type":"log","text":"encoder session 10.6s"}
+  [24s console.info] [sam3] encoder session 10.6s
+  [24s console.info] [sam3-debug] {"type":"ready","ep":"wasm","threads":1,"isolated":true}
+  [24s console.info] [sam3-debug] {"type":"stage","text":"이미지 분석 중… (가장 오래 걸려요)"}
+  [55s console.info] [sam3-debug] {"type":"decode","done":0,"total":37,"prompt":"person"}
+  [57s console.info] [sam3-debug] {"type":"log","text":"person: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [57s console.info] [sam3] person: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [57s console.info] [sam3-debug] {"type":"decode","done":1,"total":37,"prompt":"car"}
+  [59s console.info] [sam3-debug] {"type":"log","text":"car: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [59s console.info] [sam3] car: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [59s console.info] [sam3-debug] {"type":"decode","done":2,"total":37,"prompt":"bicycle"}
+  [60s console.info] [sam3-debug] {"type":"log","text":"bicycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [60s console.info] [sam3] bicycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [60s console.info] [sam3-debug] {"type":"decode","done":3,"total":37,"prompt":"motorcycle"}
+  [62s console.info] [sam3-debug] {"type":"log","text":"motorcycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [62s console.info] [sam3] motorcycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [62s console.info] [sam3-debug] {"type":"decode","done":4,"total":37,"prompt":"bus"}
+  [63s console.info] [sam3-debug] {"type":"log","text":"bus: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [63s console.info] [sam3] bus: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [63s console.info] [sam3-debug] {"type":"decode","done":5,"total":37,"prompt":"truck"}
+  [65s console.info] [sam3-debug] {"type":"log","text":"truck: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [65s console.info] [sam3] truck: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [65s console.info] [sam3-debug] {"type":"decode","done":6,"total":37,"prompt":"dog"}
+  [66s console.info] [sam3-debug] {"type":"log","text":"dog: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [66s console.info] [sam3] dog: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [66s console.info] [sam3-debug] {"type":"decode","done":7,"total":37,"prompt":"cat"}
+  [68s console.info] [sam3-debug] {"type":"log","text":"cat: 후보 2개, 기준 이상 2개, 중복 제거 후 2개"}
+  [68s console.info] [sam3] cat: 후보 2개, 기준 이상 2개, 중복 제거 후 2개
+  [68s console.info] [sam3-debug] {"type":"decode","done":8,"total":37,"prompt":"bird"}
+  [69s console.info] [sam3-debug] {"type":"log","text":"bird: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [69s console.info] [sam3] bird: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [69s console.info] [sam3-debug] {"type":"decode","done":9,"total":37,"prompt":"chair"}
+  [71s console.info] [sam3-debug] {"type":"log","text":"chair: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [71s console.info] [sam3] chair: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [71s console.info] [sam3-debug] {"type":"decode","done":10,"total":37,"prompt":"table"}
+  [73s console.info] [sam3-debug] {"type":"log","text":"table: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [73s console.info] [sam3] table: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [73s console.info] [sam3-debug] {"type":"decode","done":11,"total":37,"prompt":"sofa"}
+  [74s console.info] [sam3-debug] {"type":"log","text":"sofa: 후보 1개, 기준 이상 1개, 중복 제거 후 1개"}
+  [74s console.info] [sam3] sofa: 후보 1개, 기준 이상 1개, 중복 제거 후 1개
+  [74s console.info] [sam3-debug] {"type":"decode","done":12,"total":37,"prompt":"bed"}
+  [76s console.info] [sam3-debug] {"type":"log","text":"bed: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [76s console.info] [sam3] bed: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [76s console.info] [sam3-debug] {"type":"decode","done":13,"total":37,"prompt":"bottle"}
+  [77s console.info] [sam3-debug] {"type":"log","text":"bottle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [77s console.info] [sam3] bottle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [77s console.info] [sam3-debug] {"type":"decode","done":14,"total":37,"prompt":"cup"}
+  [79s console.info] [sam3-debug] {"type":"log","text":"cup: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [79s console.info] [sam3] cup: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [79s console.info] [sam3-debug] {"type":"decode","done":15,"total":37,"prompt":"laptop"}
+  [80s console.info] [sam3-debug] {"type":"log","text":"laptop: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [80s console.info] [sam3] laptop: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [80s console.info] [sam3-debug] {"type":"decode","done":16,"total":37,"prompt":"cell phone"}
+  [82s console.info] [sam3-debug] {"type":"log","text":"cell phone: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [82s console.info] [sam3] cell phone: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [82s console.info] [sam3-debug] {"type":"decode","done":17,"total":37,"prompt":"book"}
+  [83s console.info] [sam3-debug] {"type":"log","text":"book: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [83s console.info] [sam3] book: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [83s console.info] [sam3-debug] {"type":"decode","done":18,"total":37,"prompt":"potted plant"}
+  [85s console.info] [sam3-debug] {"type":"log","text":"potted plant: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [85s console.info] [sam3] potted plant: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [85s console.info] [sam3-debug] {"type":"decode","done":19,"total":37,"prompt":"tv"}
+  [86s console.info] [sam3-debug] {"type":"log","text":"tv: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [86s console.info] [sam3] tv: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [86s console.info] [sam3-debug] {"type":"decode","done":20,"total":37,"prompt":"bag"}
+  [88s console.info] [sam3-debug] {"type":"log","text":"bag: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [88s console.info] [sam3] bag: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [88s console.info] [sam3-debug] {"type":"decode","done":21,"total":37,"prompt":"umbrella"}
+  [90s console.info] [sam3-debug] {"type":"log","text":"umbrella: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [90s console.info] [sam3] umbrella: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [90s console.info] [sam3-debug] {"type":"decode","done":22,"total":37,"prompt":"sky"}
+  [91s console.info] [sam3-debug] {"type":"log","text":"sky: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [91s console.info] [sam3] sky: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [91s console.info] [sam3-debug] {"type":"decode","done":23,"total":37,"prompt":"tree"}
+  [93s console.info] [sam3-debug] {"type":"log","text":"tree: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [93s console.info] [sam3] tree: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [93s console.info] [sam3-debug] {"type":"decode","done":24,"total":37,"prompt":"grass"}
+  [94s console.info] [sam3-debug] {"type":"log","text":"grass: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [94s console.info] [sam3] grass: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [94s console.info] [sam3-debug] {"type":"decode","done":25,"total":37,"prompt":"road"}
+  [96s console.info] [sam3-debug] {"type":"log","text":"road: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [96s console.info] [sam3] road: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [96s console.info] [sam3-debug] {"type":"decode","done":26,"total":37,"prompt":"sidewalk"}
+  [97s console.info] [sam3-debug] {"type":"log","text":"sidewalk: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [97s console.info] [sam3] sidewalk: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [97s console.info] [sam3-debug] {"type":"decode","done":27,"total":37,"prompt":"building"}
+  [99s console.info] [sam3-debug] {"type":"log","text":"building: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [99s console.info] [sam3] building: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [99s console.info] [sam3-debug] {"type":"decode","done":28,"total":37,"prompt":"wall"}
+  [100s console.info] [sam3-debug] {"type":"log","text":"wall: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [100s console.info] [sam3] wall: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [100s console.info] [sam3-debug] {"type":"decode","done":29,"total":37,"prompt":"floor"}
+  [102s console.info] [sam3-debug] {"type":"log","text":"floor: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [102s console.info] [sam3] floor: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [102s console.info] [sam3-debug] {"type":"decode","done":30,"total":37,"prompt":"ceiling"}
+  [104s console.info] [sam3-debug] {"type":"log","text":"ceiling: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [104s console.info] [sam3] ceiling: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [104s console.info] [sam3-debug] {"type":"decode","done":31,"total":37,"prompt":"water"}
+  [105s console.info] [sam3-debug] {"type":"log","text":"water: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [105s console.info] [sam3] water: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [105s console.info] [sam3-debug] {"type":"decode","done":32,"total":37,"prompt":"mountain"}
+  [107s console.info] [sam3-debug] {"type":"log","text":"mountain: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [107s console.info] [sam3] mountain: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [107s console.info] [sam3-debug] {"type":"decode","done":33,"total":37,"prompt":"sand"}
+  [108s console.info] [sam3-debug] {"type":"log","text":"sand: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [108s console.info] [sam3] sand: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [108s console.info] [sam3-debug] {"type":"decode","done":34,"total":37,"prompt":"snow"}
+  [110s console.info] [sam3-debug] {"type":"log","text":"snow: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [110s console.info] [sam3] snow: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [110s console.info] [sam3-debug] {"type":"decode","done":35,"total":37,"prompt":"window"}
+  [111s console.info] [sam3-debug] {"type":"log","text":"window: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [111s console.info] [sam3] window: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [111s console.info] [sam3-debug] {"type":"decode","done":36,"total":37,"prompt":"door"}
+  [113s console.info] [sam3-debug] {"type":"log","text":"door: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [113s console.info] [sam3] door: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [113s console.info] [sam3-debug] {"type":"result","items":[{"prompt":"cat","confidence":0.964518129825592,"box":[243.36196899414062,26.531728744506836,439.550537109375,336.9260559082031],"mask":"<196608B>","w":512,"h":384},{"prompt":"cat","confidence":0.9595773816108704,"box":[11.403325080871582,49.25585174560547,213.3
+E2E threads=1 cats.jpg: 111.049s 
+  timing: 기기에서 처리 · CPU 1스레드 · 이미지 분석 31.6초 · 대상 37개 57.4초
+  legend: 소파물체55.8% · 93 | 고양이 2물체18.4% · 96 | 고양이 1물체16.2% · 96
+  [116s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
+  [116s console.info] [sam3-debug] {"type":"stage","text":"이미지 분석 중… (가장 오래 걸려요)"}
+  [147s console.info] [sam3-debug] {"type":"decode","done":0,"total":37,"prompt":"person"}
+  [149s console.info] [sam3-debug] {"type":"log","text":"person: 후보 2개, 기준 이상 2개, 중복 제거 후 2개"}
+  [149s console.info] [sam3] person: 후보 2개, 기준 이상 2개, 중복 제거 후 2개
+  [149s console.info] [sam3-debug] {"type":"decode","done":1,"total":37,"prompt":"car"}
+  [151s console.info] [sam3-debug] {"type":"log","text":"car: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [151s console.info] [sam3] car: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [151s console.info] [sam3-debug] {"type":"decode","done":2,"total":37,"prompt":"bicycle"}
+  [152s console.info] [sam3-debug] {"type":"log","text":"bicycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [152s console.info] [sam3] bicycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [152s console.info] [sam3-debug] {"type":"decode","done":3,"total":37,"prompt":"motorcycle"}
+  [154s console.info] [sam3-debug] {"type":"log","text":"motorcycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [154s console.info] [sam3] motorcycle: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [154s console.info] [sam3-debug] {"type":"decode","done":4,"total":37,"prompt":"bus"}
+  [155s console.info] [sam3-debug] {"type":"log","text":"bus: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [155s console.info] [sam3] bus: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [155s console.info] [sam3-debug] {"type":"decode","done":5,"total":37,"prompt":"truck"}
+  [157s console.info] [sam3-debug] {"type":"log","text":"truck: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [157s console.info] [sam3] truck: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [157s console.info] [sam3-debug] {"type":"decode","done":6,"total":37,"prompt":"dog"}
+  [158s console.info] [sam3-debug] {"type":"log","text":"dog: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [158s console.info] [sam3] dog: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [158s console.info] [sam3-debug] {"type":"decode","done":7,"total":37,"prompt":"cat"}
+  [160s console.info] [sam3-debug] {"type":"log","text":"cat: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [160s console.info] [sam3] cat: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [160s console.info] [sam3-debug] {"type":"decode","done":8,"total":37,"prompt":"bird"}
+  [161s console.info] [sam3-debug] {"type":"log","text":"bird: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [161s console.info] [sam3] bird: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [161s console.info] [sam3-debug] {"type":"decode","done":9,"total":37,"prompt":"chair"}
+  [163s console.info] [sam3-debug] {"type":"log","text":"chair: 후보 3개, 기준 이상 3개, 중복 제거 후 3개"}
+  [163s console.info] [sam3] chair: 후보 3개, 기준 이상 3개, 중복 제거 후 3개
+  [163s console.info] [sam3-debug] {"type":"decode","done":10,"total":37,"prompt":"table"}
+  [164s console.info] [sam3-debug] {"type":"log","text":"table: 후보 2개, 기준 이상 2개, 중복 제거 후 2개"}
+  [164s console.info] [sam3] table: 후보 2개, 기준 이상 2개, 중복 제거 후 2개
+  [164s console.info] [sam3-debug] {"type":"decode","done":11,"total":37,"prompt":"sofa"}
+  [166s console.info] [sam3-debug] {"type":"log","text":"sofa: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [166s console.info] [sam3] sofa: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [166s console.info] [sam3-debug] {"type":"decode","done":12,"total":37,"prompt":"bed"}
+  [168s console.info] [sam3-debug] {"type":"log","text":"bed: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [168s console.info] [sam3] bed: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [168s console.info] [sam3-debug] {"type":"decode","done":13,"total":37,"prompt":"bottle"}
+  [169s console.info] [sam3-debug] {"type":"log","text":"bottle: 후보 1개, 기준 이상 1개, 중복 제거 후 1개"}
+  [169s console.info] [sam3] bottle: 후보 1개, 기준 이상 1개, 중복 제거 후 1개
+  [169s console.info] [sam3-debug] {"type":"decode","done":14,"total":37,"prompt":"cup"}
+  [171s console.info] [sam3-debug] {"type":"log","text":"cup: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [171s console.info] [sam3] cup: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [171s console.info] [sam3-debug] {"type":"decode","done":15,"total":37,"prompt":"laptop"}
+  [172s console.info] [sam3-debug] {"type":"log","text":"laptop: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [172s console.info] [sam3] laptop: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [172s console.info] [sam3-debug] {"type":"decode","done":16,"total":37,"prompt":"cell phone"}
+  [174s console.info] [sam3-debug] {"type":"log","text":"cell phone: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [174s console.info] [sam3] cell phone: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [174s console.info] [sam3-debug] {"type":"decode","done":17,"total":37,"prompt":"book"}
+  [175s console.info] [sam3-debug] {"type":"log","text":"book: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [175s console.info] [sam3] book: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [175s console.info] [sam3-debug] {"type":"decode","done":18,"total":37,"prompt":"potted plant"}
+  [177s console.info] [sam3-debug] {"type":"log","text":"potted plant: 후보 1개, 기준 이상 1개, 중복 제거 후 1개"}
+  [177s console.info] [sam3] potted plant: 후보 1개, 기준 이상 1개, 중복 제거 후 1개
+  [177s console.info] [sam3-debug] {"type":"decode","done":19,"total":37,"prompt":"tv"}
+  [178s console.info] [sam3-debug] {"type":"log","text":"tv: 후보 2개, 기준 이상 2개, 중복 제거 후 2개"}
+  [178s console.info] [sam3] tv: 후보 2개, 기준 이상 2개, 중복 제거 후 2개
+  [178s console.info] [sam3-debug] {"type":"decode","done":20,"total":37,"prompt":"bag"}
+  [180s console.info] [sam3-debug] {"type":"log","text":"bag: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [180s console.info] [sam3] bag: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [180s console.info] [sam3-debug] {"type":"decode","done":21,"total":37,"prompt":"umbrella"}
+  [182s console.info] [sam3-debug] {"type":"log","text":"umbrella: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [182s console.info] [sam3] umbrella: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [182s console.info] [sam3-debug] {"type":"decode","done":22,"total":37,"prompt":"sky"}
+  [183s console.info] [sam3-debug] {"type":"log","text":"sky: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [183s console.info] [sam3] sky: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [183s console.info] [sam3-debug] {"type":"decode","done":23,"total":37,"prompt":"tree"}
+  [185s console.info] [sam3-debug] {"type":"log","text":"tree: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [185s console.info] [sam3] tree: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [185s console.info] [sam3-debug] {"type":"decode","done":24,"total":37,"prompt":"grass"}
+  [186s console.info] [sam3-debug] {"type":"log","text":"grass: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [186s console.info] [sam3] grass: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [186s console.info] [sam3-debug] {"type":"decode","done":25,"total":37,"prompt":"road"}
+  [188s console.info] [sam3-debug] {"type":"log","text":"road: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [188s console.info] [sam3] road: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [188s console.info] [sam3-debug] {"type":"decode","done":26,"total":37,"prompt":"sidewalk"}
+  [189s console.info] [sam3-debug] {"type":"log","text":"sidewalk: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [189s console.info] [sam3] sidewalk: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [189s console.info] [sam3-debug] {"type":"decode","done":27,"total":37,"prompt":"building"}
+  [191s console.info] [sam3-debug] {"type":"log","text":"building: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [191s console.info] [sam3] building: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [191s console.info] [sam3-debug] {"type":"decode","done":28,"total":37,"prompt":"wall"}
+  [192s console.info] [sam3-debug] {"type":"log","text":"wall: 후보 4개, 기준 이상 4개, 중복 제거 후 4개"}
+  [192s console.info] [sam3] wall: 후보 4개, 기준 이상 4개, 중복 제거 후 4개
+  [192s console.info] [sam3-debug] {"type":"decode","done":29,"total":37,"prompt":"floor"}
+  [194s console.info] [sam3-debug] {"type":"log","text":"floor: 후보 3개, 기준 이상 3개, 중복 제거 후 3개"}
+  [194s console.info] [sam3] floor: 후보 3개, 기준 이상 3개, 중복 제거 후 3개
+  [194s console.info] [sam3-debug] {"type":"decode","done":30,"total":37,"prompt":"ceiling"}
+  [195s console.info] [sam3-debug] {"type":"log","text":"ceiling: 후보 3개, 기준 이상 3개, 중복 제거 후 2개"}
+  [195s console.info] [sam3] ceiling: 후보 3개, 기준 이상 3개, 중복 제거 후 2개
+  [195s console.info] [sam3-debug] {"type":"decode","done":31,"total":37,"prompt":"water"}
+  [197s console.info] [sam3-debug] {"type":"log","text":"water: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [197s console.info] [sam3] water: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [197s console.info] [sam3-debug] {"type":"decode","done":32,"total":37,"prompt":"mountain"}
+  [198s console.info] [sam3-debug] {"type":"log","text":"mountain: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [198s console.info] [sam3] mountain: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [198s console.info] [sam3-debug] {"type":"decode","done":33,"total":37,"prompt":"sand"}
+  [200s console.info] [sam3-debug] {"type":"log","text":"sand: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [200s console.info] [sam3] sand: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [200s console.info] [sam3-debug] {"type":"decode","done":34,"total":37,"prompt":"snow"}
+  [202s console.info] [sam3-debug] {"type":"log","text":"snow: 후보 0개, 기준 이상 0개, 중복 제거 후 0개"}
+  [202s console.info] [sam3] snow: 후보 0개, 기준 이상 0개, 중복 제거 후 0개
+  [202s console.info] [sam3-debug] {"type":"decode","done":35,"total":37,"prompt":"window"}
+  [203s console.info] [sam3-debug] {"type":"log","text":"window: 후보 4개, 기준 이상 4개, 중복 제거 후 4개"}
+  [203s console.info] [sam3] window: 후보 4개, 기준 이상 4개, 중복 제거 후 4개
+  [203s console.info] [sam3-debug] {"type":"decode","done":36,"total":37,"prompt":"door"}
+  [205s console.info] [sam3-debug] {"type":"log","text":"door: 후보 3개, 기준 이상 3개, 중복 제거 후 3개"}
+  [205s console.info] [sam3] door: 후보 3개, 기준 이상 3개, 중복 제거 후 3개
+  [205s console.info] [sam3-debug] {"type":"result","items":[{"prompt":"person","confidence":0.8674415946006775,"box":[291.65582275390625,166.1197509765625,315.75140380859375,302.246826171875],"mask":"<174592B>","w":512,"h":341},{"prompt":"person","confidence":0.8226664662361145,"box":[267.2446594238281,182.0458984375,27
+  [205s console.warning] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+E2E threads=1 room.jpg: 91.032s 
+  timing: 기기에서 처리 · CPU 1스레드 · 이미지 분석 31.8초 · 대상 37개 57.2초
+  legend: TV 1물체4.7% · 95 | 테이블 2물체2.7% · 86 | TV 2물체2.1% · 66 | 사람 2물체1.0% · 87 | 병물체0.8% · 67 | 의자 2물체0.7% · 78 | 테이블 1물체0.6% · 80 | 의자 1물체0.5% · 78 | 의자 3물체0.3% · 71 | 화분물체0.2% · 74 | 사람 1물체0.2% · 82 | 바닥배경19.9% · 76 | 벽배경18.3% · 82 | 천장배경7.1% · 74 | 창문배경6.1% · 77 | 문배경0.8% · 60
