@@ -51,13 +51,17 @@ AAC가 아닌 오디오나 fragmented MP4 등은 파일 전체를 한 번에 디
 
 ### SAM 3 세그멘테이션 (`tools/sam3-panoptic/`)
 
-[SAM 3](https://ai.meta.com/sam3/)(Meta)로 장면 전체를 물체/배경 영역으로 나눕니다. 모델이 약 850MB라 휴대폰에서 직접 돌리지 않고 **Roboflow Serverless API**를 사용하므로, 페이지에서 Roboflow **프라이빗** API 키를 입력해야 합니다(기기에만 저장). 퍼블리셔블 키(`rf_…`)는 서버리스 API에서 `401 not authorized for serverless inference`로 거절됩니다(2026-11 확인). (이 도구만 이미지를 외부 서버로 전송)
+[SAM 3](https://ai.meta.com/sam3/)(Meta)로 장면 전체를 물체/배경 영역으로 나눕니다(파놉틱). SAM 3는 텍스트 개념별 마스크를 주는 모델이라, 물체(things)·배경(stuff) 단어 목록으로 각각 마스크를 구한 뒤 브라우저에서 하나의 라벨 맵으로 합칩니다(물체 > 배경, 같은 종류는 신뢰도 높은 쪽, 물체는 인스턴스별).
 
-- SAM 3는 텍스트 개념별 마스크를 주는 모델이라, 물체(things)·배경(stuff) 개념 목록을 보내고(요청당 16개씩 나눠서) 결과를 브라우저에서 하나의 파놉틱 라벨 맵으로 합칩니다.
-  - 픽셀마다 한 영역만: 물체가 배경보다 우선, 같은 종류끼리는 신뢰도 높은 쪽
-  - 물체는 인스턴스별(자동차 1, 2…), 배경은 같은 클래스끼리 하나의 영역
-- 신뢰도 기준·색 진하기·경계선·라벨 조절, 영역을 눌러 강조, PNG 저장
-- 찾을 대상 목록은 직접 수정 가능 (영어 단어)
+두 가지 실행 방식:
+
+- **기기에서 (기본, 실험)** — [rusen/sam3-browser-int8](https://huggingface.co/rusen/sam3-browser-int8)의 `compact-448` INT8 모델을 ONNX Runtime Web(`vendor/onnxruntime-web/`, MIT)으로 실행. 이미지가 기기 밖으로 나가지 않음.
+  - 첫 실행 때 이미지 인코더(약 462MB) + 디코더(약 36MB)를 Hugging Face에서 받아 Cache Storage에 저장
+  - 기본 단어 목록의 텍스트 특징은 `text-embeddings.*`로 미리 계산해 둠 → 텍스트 모델(355MB) 불필요. 목록에 없는 단어를 쓰면 그때 텍스트 모델과 CLIP 토크나이저(`clip-tokenizer.js`)를 받아 계산
+  - onnxruntime-web 1.31에서 이 모델은 그래프 최적화를 켜면 로딩이 실패(ShapeInferenceError)해서 인코더는 최적화를 끔. 멀티스레드 WASM은 초기화가 멈춰서 단일 스레드 사용
+  - 측정(헤드리스 Chromium, x86 CPU 1스레드): 이미지 분석 약 32초 + 단어 37개 약 57초. 결과는 파이썬 onnxruntime 참조 실행과 일치
+  - 기본 단어 목록을 바꾸면 `scripts/sam3-text-embeddings.py`로 텍스트 특징을 다시 생성
+- **서버에서** — Roboflow Serverless API. 페이지에서 **프라이빗** API 키 입력 필요(기기에만 저장). 퍼블리셔블 키(`rf_…`)는 `401 not authorized for serverless inference`로 거절됨
 
 ## 로컬 실행
 

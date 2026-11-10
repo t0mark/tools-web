@@ -1,7 +1,0 @@
-crossOriginIsolated: true
-  [4s dialog] SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?
-  [4s worker] http://localhost:8000/tools/sam3-panoptic/sam3.worker.js?v=20261110a
-  [4s console.info] [sam3-debug] {"type":"log","text":"init ep=wasm threads=4 isolated=true"}
-  [4s console.info] [sam3] init ep=wasm threads=4 isolated=true
-  [5s console.info] [sam3-debug] {"type":"stage","text":"디코더 준비 중…"}
-[545s] FAILED: TIMEOUT 9min

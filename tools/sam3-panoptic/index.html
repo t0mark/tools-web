@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="Tools Web" />
   <link rel="manifest" href="../../manifest.webmanifest" />
   <link rel="stylesheet" href="../../assets/css/base.css?v=20261109d" />
-  <link rel="stylesheet" href="style.css?v=20261109e" />
+  <link rel="stylesheet" href="style.css?v=20261110b" />
 </head>
 <body>
   <header class="topbar">
@@ -37,7 +37,8 @@
 
       <div id="local-box">
         <p class="small">SAM 3(INT8 경량화, 448px 입력)를 이 기기에서 직접 실행합니다. 이미지가 밖으로 나가지 않아요.
-          휴대폰 성능에 따라 한 장에 수십 초 이상 걸리거나, 메모리가 부족하면 실패할 수 있어요.</p>
+          CPU로는 사진 한 장에 1~3분 정도 걸리고(PC 기준 약 1분 30초), 메모리가 부족하면 실패할 수 있어요.
+          GPU(WebGPU)를 지원하는 브라우저에서는 더 빠를 수 있어요.</p>
         <p class="small" id="model-state"></p>
         <div class="range-row">
           <label for="ep-select">가속</label>
@@ -128,6 +129,6 @@
       서버 실행: Roboflow Serverless API (이 경우만 이미지가 Roboflow로 전송됨)</p>
   </main>
 
-  <script src="app.js?v=20261109e"></script>
+  <script src="app.js?v=20261110b"></script>
 </body>
 </html>

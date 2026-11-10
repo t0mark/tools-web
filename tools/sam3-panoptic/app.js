@@ -126,17 +126,8 @@
     syncModelState();
   });
 
-  // 멀티스레드 WASM(SharedArrayBuffer)을 위해 교차 출처 격리용 서비스 워커 등록 (최초 1회 새로고침)
-  if ('serviceWorker' in navigator && window.isSecureContext && !window.crossOriginIsolated) {
-    navigator.serviceWorker.register('coi-sw.js').then(() => {
-      let reloaded = null;
-      try { reloaded = sessionStorage.getItem('coi-reloaded'); } catch (e) { /* 무시 */ }
-      if (!reloaded) {
-        try { sessionStorage.setItem('coi-reloaded', '1'); } catch (e) { /* 무시 */ }
-        window.location.reload();
-      }
-    }).catch(() => { /* 지원 안 되면 단일 스레드로 동작 */ });
-  }
+  // 모델(약 500MB)이 브라우저 정리 대상이 되지 않도록 영구 저장 요청
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   els.apiKey.addEventListener('input', () => {
     syncKeyState();
     if (els.rememberKey.checked) store.set(KEY_STORAGE, els.apiKey.value.trim());
@@ -235,7 +226,7 @@
 
   function getWorker() {
     if (worker) return workerReady;
-    worker = new Worker('sam3.worker.js?v=20261110a', { type: 'module' });
+    worker = new Worker('sam3.worker.js?v=20261110b', { type: 'module' });
     let lastLog = 0;
     worker.onmessage = (e) => {
       if (DEBUG && (e.data.type !== 'progress' || Date.now() - lastLog > 3000)) {
@@ -251,6 +242,7 @@
         if (m.type === 'progress') setProgress(m.cached ? `${m.label} 불러오는 중…` : `${m.label} 내려받는 중 ${mb(m.loaded)} / ${mb(m.total)}MB`, m.loaded / m.total);
         else if (m.type === 'stage') setProgress(m.text, null);
         else if (m.type === 'log') console.info('[sam3]', m.text);
+        else if (m.type === 'cachefail') state.cacheFailed = true;
         else if (m.type === 'ready') { syncModelState(); resolve(m); }
         else if (m.type === 'error') { resetWorker(); reject(new Error(m.message)); }
       };
@@ -274,7 +266,7 @@
   }
 
   async function runLocal(prompts) {
-    if (!(await modelCached()) && !confirm('SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?')) {
+    if (!workerReady && !(await modelCached()) && !confirm('SAM 3 모델 약 500MB를 내려받습니다. Wi-Fi 연결을 권장해요. 계속할까요?')) {
       throw new Error('모델 다운로드를 취소했어요.');
     }
     setProgress('모델 준비 중…', null);
@@ -363,7 +355,8 @@
       }));
       const t = res.timings;
       const engine = res.ep === 'webgpu' ? 'GPU(WebGPU)' : `CPU ${res.info.threads}스레드`;
-      els.timing.textContent = `기기에서 처리 · ${engine} · 이미지 분석 ${(t.encode / 1000).toFixed(1)}초 · 대상 ${all.length}개 ${(t.decode / 1000).toFixed(1)}초`;
+      els.timing.textContent = `기기에서 처리 · ${engine} · 이미지 분석 ${(t.encode / 1000).toFixed(1)}초 · 대상 ${all.length}개 ${(t.decode / 1000).toFixed(1)}초`
+        + (state.cacheFailed ? ' · ⚠ 저장 공간이 부족해 모델을 기기에 저장하지 못했어요. 페이지를 다시 열면 다시 내려받아요.' : '');
       compose();
     } catch (err) {
       console.error(err);
@@ -513,7 +506,7 @@
     const w = state.image.width, h = state.image.height;
     const cv = els.cv;
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
-    const ctx = cv.getContext('2d');
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(state.image, 0, 0);
     if (!state.labels || state.opts.original) return;
 

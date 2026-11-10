@@ -22,7 +22,9 @@ const INPUT = 448;
 const NMS_IOU = 0.7;
 
 ort.env.wasm.wasmPaths = new URL('../../vendor/onnxruntime-web/', import.meta.url).href;
-ort.env.wasm.numThreads = 1; // 멀티스레드는 세션 생성이 멈추는 문제가 있어 기본 1 (?threads=N 으로 시험 가능)
+// 멀티스레드 WASM은 교차 출처 격리가 필요하고, 시험해 보니 초기화에서 멈춰서 단일 스레드로 고정
+// (?threads=N 쿼리로 시험은 가능). 휴대폰에서는 WebGPU가 주 가속 수단.
+ort.env.wasm.numThreads = 1;
 ort.env.wasm.proxy = false;
 
 const post = (msg, transfer) => self.postMessage(msg, transfer || []);
@@ -52,7 +54,7 @@ async function cachedBytes(key) {
     const [a, b] = body.tee();
     body = a;
     putPromise = cache.put(f.url, new Response(b, { headers: { 'content-type': 'application/octet-stream' } }))
-      .catch((e) => post({ type: 'log', text: `캐시 저장 실패(용량 부족 등): ${e.message}` }));
+      .catch((e) => { post({ type: 'log', text: `캐시 저장 실패(용량 부족 등): ${e.message}` }); post({ type: 'cachefail' }); });
   }
   const buf = new Uint8Array(total);
   let loaded = 0;

@@ -1,7 +1,12 @@
-"""SAM 3 기기 실행용 텍스트 특징 미리 계산 + 파이썬 참조 실행 (GitHub Actions 전용)
+"""SAM 3 기기 실행용 텍스트 특징(text-embeddings.json/.bin) 생성
 
-- 토크나이저: Hugging Face transformers 의 CLIPTokenizer (openai/clip-vit-base-patch32, CLIP BPE와 동일)
-- 모델: rusen/sam3-browser-int8 compact-448 (onnxruntime CPU)
+tools/sam3-panoptic/app.js 의 DEFAULT_THINGS / DEFAULT_STUFF 목록을 바꿨다면 이 스크립트로 다시 만든다.
+  pip install onnxruntime numpy opencv-python-headless huggingface_hub transformers
+  python scripts/sam3-text-embeddings.py [참조 실행할 이미지...]
+
+- 토크나이저: transformers 의 CLIPTokenizer (openai/clip-vit-base-patch32, CLIP BPE와 동일)
+- 모델: rusen/sam3-browser-int8 compact-448 (onnxruntime CPU). 텍스트 모델 약 355MB를 내려받는다.
+- 이미지 경로를 주면 같은 모델로 참조 실행 결과(대상별 점수)를 출력한다.
 """
 import json, re, sys, time
 import numpy as np, onnxruntime as ort, cv2
@@ -42,8 +47,8 @@ json.dump({'model': f'{REPO}@{SHA} compact-448/sam3_language_encoder.onnx', 'seq
           open('tools/sam3-panoptic/text-embeddings.json', 'w'), ensure_ascii=False, indent=1)
 print('embeddings bytes', len(blob))
 
-samples = prompts + ['A red car!', "person's bag", 'traffic light 3', '  Multiple   Spaces ', 'cafe table', 'x ' * 40]
-json.dump({s: tokenize(s).reshape(-1).tolist() for s in samples}, open('.github/sam3-test/out/tok-ref.json', 'w'))
+if len(sys.argv) < 2:
+    sys.exit(0)
 
 enc = ort.InferenceSession(dl('compact-448/sam3_image_encoder_fp16.onnx'), providers=['CPUExecutionProvider'])
 dec = ort.InferenceSession(dl('compact-448/sam3_decoder.onnx'), providers=['CPUExecutionProvider'])
