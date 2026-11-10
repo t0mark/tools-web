@@ -1,10 +1,8 @@
-FAIL Xenova/detr-resnet-50-panoptic [q8]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL Xenova/detr-resnet-50-panoptic [fp16]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL Xenova/detr-resnet-50-panoptic [fp32]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/maskformer-swin-tiny-coco [q8]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/maskformer-swin-tiny-coco [fp32]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/maskformer-swin-small-coco [q8]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/maskformer-swin-base-coco [q8]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/maskformer-swin-base-coco [fp16]: Unsupported device: "wasm". Should be one of: cuda, webgpu, cpu.
-FAIL onnx-community/mask2former-swin-tiny-coco-panoptic [q8]: Unauthorized access to file: "https://huggingface.co/onnx-community/mask2former-swin-tiny-coco-panoptic/resolve/main/config.json".
-FAIL Xenova/mask2former-swin-tiny-coco-panoptic [q8]: Unauthorized access to file: "https://huggingface.co/Xenova/mask2former-swin-tiny-coco-panoptic/resolve/main/config.json".
+FAIL Xenova/detr-resnet-50-panoptic [q8]: fn2 is not a function
+FAIL Xenova/detr-resnet-50-panoptic [fp32]: fn2 is not a function
+FAIL Xenova/detr-resnet-101-panoptic [q8]: Unauthorized access to file: "https://huggingface.co/Xenova/detr-resnet-101-panoptic/resolve/main/config.json".
+FAIL onnx-community/maskformer-swin-tiny-coco [q8]: fn2 is not a function
+FAIL onnx-community/maskformer-swin-tiny-coco [fp32]: fn2 is not a function
+FAIL onnx-community/maskformer-swin-small-coco [q8]: fn2 is not a function
+FAIL onnx-community/maskformer-swin-base-coco [q8]: fn2 is not a function
+FAIL onnx-community/maskformer-swin-base-coco [fp32]: fn2 is not a function
