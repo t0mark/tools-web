@@ -3,19 +3,19 @@
 import { pipeline, env, RawImage } from '@huggingface/transformers';
 import fs from 'node:fs';
 
-env.backends.onnx.wasm.numThreads = 1;
+
 const images = process.argv.slice(2);
 const candidates = [
-  ['Xenova/detr-resnet-50-panoptic', 'q8'], ['Xenova/detr-resnet-50-panoptic', 'fp16'], ['Xenova/detr-resnet-50-panoptic', 'fp32'],
+  ['Xenova/detr-resnet-50-panoptic', 'q8'], ['Xenova/detr-resnet-50-panoptic', 'fp32'],
+  ['Xenova/detr-resnet-101-panoptic', 'q8'],
   ['onnx-community/maskformer-swin-tiny-coco', 'q8'], ['onnx-community/maskformer-swin-tiny-coco', 'fp32'],
   ['onnx-community/maskformer-swin-small-coco', 'q8'],
-  ['onnx-community/maskformer-swin-base-coco', 'q8'], ['onnx-community/maskformer-swin-base-coco', 'fp16'],
-  ['onnx-community/mask2former-swin-tiny-coco-panoptic', 'q8'], ['Xenova/mask2former-swin-tiny-coco-panoptic', 'q8'],
+  ['onnx-community/maskformer-swin-base-coco', 'q8'], ['onnx-community/maskformer-swin-base-coco', 'fp32'],
 ];
 for (const [model, dtype] of candidates) {
   const t0 = Date.now();
   try {
-    const seg = await pipeline('image-segmentation', model, { dtype, device: 'wasm' });
+    const seg = await pipeline('image-segmentation', model, { dtype, device: 'cpu', session_options: { intraOpNumThreads: 1 } });
     const tLoad = Date.now() - t0;
     for (const img of images) {
       const image = await RawImage.read(img);
